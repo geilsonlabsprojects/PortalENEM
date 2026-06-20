@@ -1,0 +1,1316 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Menu, X, Sun, Moon, LogIn, LogOut, User, Users, FileText, 
+  BookOpen, BarChart2, Bell, Award, Plus, Trash2, Edit, Save, 
+  Image as ImageIcon, Link as LinkIcon, Video, AlertTriangle, 
+  Pin, CheckCircle, Search, Download, Printer, ShieldCheck
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, 
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getDatabase, ref, set, push, get, onValue, remove, update, query, orderByChild, equalTo 
+} from 'firebase/database';
+
+// --- CONFIGURAÇÕES E APIS ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAEDi-eQJgTc_IW1s-pd0dcjQTFBpb9dLM",
+  authDomain: "portalsimulado-88969.firebaseapp.com",
+  databaseURL: "https://portalsimulado-88969-default-rtdb.firebaseio.com",
+  projectId: "portalsimulado-88969",
+  storageBucket: "portalsimulado-88969.firebasestorage.app",
+  messagingSenderId: "514078102421",
+  appId: "1:514078102421:web:404f48cf8de18deca95c9c",
+  measurementId: "G-39P2B0S095"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const IMGBB_API_KEY = "f7722de0484f8d2059ce8ad1604be00b";
+
+// Helper para upload de imagens
+const uploadImageToImgBB = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    throw new Error("Erro no upload da imagem");
+  } catch (err) {
+    console.error(err);
+    alert("Falha ao enviar a imagem.");
+    return null;
+  }
+};
+
+// --- COMPONENTES GERAIS ---
+const Spinner = () => (
+  <div className="flex justify-center items-center py-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
+
+// --- COMPONENTE PRINCIPAL ---
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null); // Contém 'role' e outros dados do DB
+  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [publicValidateCode, setPublicValidateCode] = useState(null);
+
+  // Toggle Dark Mode
+  useEffect(() => {
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [darkMode]);
+
+  // Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Buscar dados do usuário no Realtime DB
+        const userRef = ref(db, `usuarios/${currentUser.uid}`);
+        onValue(userRef, (snapshot) => {
+          if (snapshot.exists()) {
+            setUserData(snapshot.val());
+          } else {
+            // Se não existe, cria como aluno por padrão (pode ser alterado no primeiro login)
+            const newUser = {
+              email: currentUser.email,
+              nome: currentUser.displayName || 'Usuário',
+              role: 'aluno',
+              fotoUrl: currentUser.photoURL || ''
+            };
+            set(userRef, newUser);
+            setUserData(newUser);
+          }
+          setLoading(false);
+        });
+      } else {
+        setUser(null);
+        setUserData(null);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Roteamento Simples
+  if (publicValidateCode !== null) {
+    return <PublicValidationView code={publicValidateCode} onBack={() => setPublicValidateCode(null)} darkMode={darkMode} setDarkMode={setDarkMode} />;
+  }
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><Spinner /></div>;
+
+  if (!user || !userData) {
+    return <LoginView setPublicValidateCode={setPublicValidateCode} darkMode={darkMode} setDarkMode={setDarkMode} />;
+  }
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} font-sans flex flex-col md:flex-row transition-colors duration-200`}>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #printable-area, #printable-area * { visibility: visible; }
+          #printable-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+      
+      {/* Sidebar */}
+      <Sidebar 
+        userData={userData} 
+        currentView={currentView} 
+        setCurrentView={setCurrentView} 
+        darkMode={darkMode} 
+        setDarkMode={setDarkMode}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
+        <header className="flex justify-between items-center mb-8 border-b pb-4 dark:border-gray-700">
+          <h1 className="text-2xl font-bold capitalize">{currentView.replace('-', ' ')}</h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <div className="flex items-center gap-2">
+              <img src={userData.fotoUrl || 'https://via.placeholder.com/40'} alt="Perfil" className="w-10 h-10 rounded-full border-2 border-blue-500 object-cover" />
+              <div className="hidden md:block">
+                <p className="text-sm font-semibold">{userData.nome}</p>
+                <p className="text-xs text-gray-500 capitalize">{userData.role}</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="content-area">
+          {userData.role === 'professor' ? (
+            <TeacherRouter view={currentView} user={user} setView={setCurrentView} />
+          ) : (
+            <StudentRouter view={currentView} user={user} setView={setCurrentView} userData={userData} />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// --- ROTAS (VIEWS) ---
+
+const TeacherRouter = ({ view, user, setView }) => {
+  switch (view) {
+    case 'dashboard': return <TeacherDashboard />;
+    case 'alunos': return <ManageStudents />;
+    case 'turmas': return <ManageClasses />;
+    case 'simulados': return <ManageExams />;
+    case 'notas': return <ManageGrades />;
+    case 'mural': return <ManageMural user={user} />;
+    case 'certificados': return <ManageCertificates user={user} />;
+    default: return <TeacherDashboard />;
+  }
+};
+
+const StudentRouter = ({ view, user, userData }) => {
+  switch (view) {
+    case 'dashboard': return <StudentDashboard user={user} />;
+    case 'boletim': return <StudentGrades user={user} />;
+    case 'mural': return <StudentMural />;
+    case 'certificados': return <StudentCertificates user={user} />;
+    default: return <StudentDashboard user={user} />;
+  }
+};
+
+// --- COMPONENTES DE LAYOUT ---
+
+const Sidebar = ({ userData, currentView, setCurrentView, darkMode, setDarkMode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const teacherLinks = [
+    { id: 'dashboard', icon: <BarChart2 size={20} />, label: 'Dashboard' },
+    { id: 'alunos', icon: <Users size={20} />, label: 'Alunos' },
+    { id: 'turmas', icon: <BookOpen size={20} />, label: 'Turmas' },
+    { id: 'simulados', icon: <FileText size={20} />, label: 'Simulados' },
+    { id: 'notas', icon: <Edit size={20} />, label: 'Lançar Notas' },
+    { id: 'mural', icon: <Bell size={20} />, label: 'Mural de Avisos' },
+    { id: 'certificados', icon: <Award size={20} />, label: 'Certificados' },
+  ];
+
+  const studentLinks = [
+    { id: 'dashboard', icon: <BarChart2 size={20} />, label: 'Meu Desempenho' },
+    { id: 'boletim', icon: <FileText size={20} />, label: 'Boletim e Notas' },
+    { id: 'mural', icon: <Bell size={20} />, label: 'Mural de Avisos' },
+    { id: 'certificados', icon: <Award size={20} />, label: 'Meus Certificados' },
+  ];
+
+  const links = userData.role === 'professor' ? teacherLinks : studentLinks;
+
+  const handleLogout = () => signOut(auth);
+
+  return (
+    <>
+      {/* Mobile Header/Toggle */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-blue-700 text-white shadow-md">
+        <div className="flex items-center gap-2 font-bold text-xl">
+          <BookOpen size={24} /> PortalENEM
+        </div>
+        <button onClick={() => setIsOpen(!isOpen)}><Menu size={28} /></button>
+      </div>
+
+      {/* Sidebar Overlay (Mobile) */}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsOpen(false)} />}
+
+      {/* Sidebar Content */}
+      <aside className={`fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl z-50 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 flex flex-col`}>
+        <div className="p-6 bg-blue-700 text-white flex items-center gap-3">
+          <BookOpen size={28} />
+          <h2 className="text-2xl font-bold tracking-tight">PortalENEM</h2>
+        </div>
+        
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+          {links.map(link => (
+            <button
+              key={link.id}
+              onClick={() => { setCurrentView(link.id); setIsOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors font-medium
+                ${currentView === link.id 
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' 
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50'}`}
+            >
+              {link.icon} {link.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t dark:border-gray-700">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
+          >
+            <LogOut size={20} /> Sair do Sistema
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+// --- AUTH VIEW ---
+
+const LoginView = ({ setPublicValidateCode, darkMode, setDarkMode }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('aluno');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        // Salvar role inicial
+        await set(ref(db, `usuarios/${userCred.user.uid}`), {
+          nome: name,
+          email,
+          role,
+          fotoUrl: ''
+        });
+      }
+    } catch (err) {
+      setError("Erro na autenticação: " + err.message);
+    }
+  };
+
+  const handleGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      // O role default é salvo no onAuthStateChanged se for a primeira vez
+    } catch (err) {
+      setError("Erro no Google Login: " + err.message);
+    }
+  };
+
+  return (
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-blue-50 text-gray-900'}`}>
+      <div className="absolute top-4 right-4">
+         <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow">
+            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+      </div>
+
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-blue-600 p-8 text-center text-white">
+          <BookOpen size={48} className="mx-auto mb-4" />
+          <h1 className="text-3xl font-bold">PortalENEM</h1>
+          <p className="text-blue-100 mt-2">Plataforma de Gestão de Simulados</p>
+        </div>
+
+        <div className="p-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">{isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}</h2>
+          
+          {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nome Completo</label>
+                  <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+                </div>
+                <div>
+                   <label className="block text-sm font-medium mb-1">Eu sou um:</label>
+                   <div className="flex gap-4">
+                     <label className="flex items-center gap-2 cursor-pointer">
+                       <input type="radio" name="role" value="aluno" checked={role==='aluno'} onChange={e=>setRole(e.target.value)} /> Aluno
+                     </label>
+                     <label className="flex items-center gap-2 cursor-pointer">
+                       <input type="radio" name="role" value="professor" checked={role==='professor'} onChange={e=>setRole(e.target.value)} /> Professor
+                     </label>
+                   </div>
+                </div>
+              </>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1">E-mail</label>
+              <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Senha</label>
+              <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+            </div>
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+              {isLogin ? 'Entrar' : 'Cadastrar'}
+            </button>
+          </form>
+
+          <div className="mt-6 flex items-center justify-between">
+            <hr className="w-full border-gray-300 dark:border-gray-600" />
+            <span className="px-3 text-gray-500 text-sm">OU</span>
+            <hr className="w-full border-gray-300 dark:border-gray-600" />
+          </div>
+
+          <button onClick={handleGoogle} className="mt-6 w-full flex items-center justify-center gap-2 border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 py-3 px-4 rounded-lg transition-colors font-medium">
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Continuar com Google
+          </button>
+
+          <p className="mt-8 text-center text-sm">
+            {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}{' '}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-blue-600 font-bold hover:underline">
+              {isLogin ? 'Cadastre-se' : 'Faça Login'}
+            </button>
+          </p>
+
+          <div className="mt-8 text-center">
+            <button onClick={() => setPublicValidateCode("")} className="text-sm flex items-center justify-center gap-1 mx-auto text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 underline">
+              <ShieldCheck size={16} /> Validar um Certificado
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- VIEWS DO PROFESSOR ---
+
+const TeacherDashboard = () => {
+  const [stats, setStats] = useState({ alunos: 0, turmas: 0, simulados: 0, mediaGeral: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [alunosSnap, turmasSnap, simSnap, notasSnap] = await Promise.all([
+        get(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno'))),
+        get(ref(db, 'turmas')),
+        get(ref(db, 'simulados')),
+        get(ref(db, 'notas'))
+      ]);
+
+      let media = 0;
+      let count = 0;
+      if (notasSnap.exists()) {
+        Object.values(notasSnap.val()).forEach(alunoNotas => {
+          Object.values(alunoNotas).forEach(nota => {
+            media += (Number(nota.total) || 0);
+            count++;
+          });
+        });
+      }
+
+      setStats({
+        alunos: alunosSnap.exists() ? Object.keys(alunosSnap.val()).length : 0,
+        turmas: turmasSnap.exists() ? Object.keys(turmasSnap.val()).length : 0,
+        simulados: simSnap.exists() ? Object.keys(simSnap.val()).length : 0,
+        mediaGeral: count > 0 ? (media / count).toFixed(2) : 0
+      });
+    };
+    fetchStats();
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total de Alunos" value={stats.alunos} icon={<Users size={24} />} color="bg-blue-500" />
+        <StatCard title="Turmas Ativas" value={stats.turmas} icon={<BookOpen size={24} />} color="bg-green-500" />
+        <StatCard title="Simulados" value={stats.simulados} icon={<FileText size={24} />} color="bg-purple-500" />
+        <StatCard title="Média Geral (ENEM)" value={stats.mediaGeral} icon={<BarChart2 size={24} />} color="bg-orange-500" />
+      </div>
+      
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+        <h3 className="text-xl font-bold mb-4">Bem-vindo ao Controle Geral</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
+          Utilize o menu lateral para gerenciar alunos, turmas, lançar notas dos simulados no padrão ENEM (5 áreas de conhecimento), e emitir certificados para os estudantes.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ title, value, icon, color }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex items-center gap-4">
+    <div className={`p-4 rounded-full text-white ${color}`}>{icon}</div>
+    <div>
+      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+      <p className="text-2xl font-bold">{value}</p>
+    </div>
+  </div>
+);
+
+// Componente Genérico para CRUD
+const ManageTurmasAndSimulados = ({ type }) => {
+  const isTurma = type === 'turmas';
+  const path = isTurma ? 'turmas' : 'simulados';
+  const title = isTurma ? 'Turmas' : 'Simulados';
+  const [items, setItems] = useState([]);
+  const [name, setName] = useState('');
+  const [dataExtra, setDataExtra] = useState('');
+
+  useEffect(() => {
+    const unsub = onValue(ref(db, path), (snap) => {
+      if (snap.exists()) {
+        const data = snap.val();
+        setItems(Object.keys(data).map(key => ({ id: key, ...data[key] })));
+      } else setItems([]);
+    });
+    return () => unsub();
+  }, [path]);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!name) return;
+    await push(ref(db, path), { nome: name, [isTurma ? 'ano' : 'data']: dataExtra });
+    setName(''); setDataExtra('');
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Tem certeza que deseja excluir?")) {
+      await remove(ref(db, `${path}/${id}`));
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 className="text-xl font-bold mb-6">Gerenciar {title}</h3>
+      <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-4 mb-8">
+        <input type="text" placeholder={`Nome ${isTurma ? 'da Turma' : 'do Simulado'}`} value={name} onChange={e=>setName(e.target.value)} className="flex-1 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+        <input type={isTurma ? "text" : "date"} placeholder={isTurma ? 'Ano (Ex: 2026)' : ''} value={dataExtra} onChange={e=>setDataExtra(e.target.value)} className="w-full md:w-48 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2">
+          <Plus size={20} /> Adicionar
+        </button>
+      </form>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-gray-50 dark:bg-gray-700">
+              <th className="p-4 font-semibold">Nome</th>
+              <th className="p-4 font-semibold">{isTurma ? 'Ano' : 'Data'}</th>
+              <th className="p-4 font-semibold text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map(item => (
+              <tr key={item.id} className="border-t dark:border-gray-700">
+                <td className="p-4">{item.nome}</td>
+                <td className="p-4">{item.ano || item.data}</td>
+                <td className="p-4 text-right">
+                  <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700"><Trash2 size={20}/></button>
+                </td>
+              </tr>
+            ))}
+            {items.length === 0 && <tr><td colSpan="3" className="p-4 text-center text-gray-500">Nenhum registro encontrado.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const ManageClasses = () => <ManageTurmasAndSimulados type="turmas" />;
+const ManageExams = () => <ManageTurmasAndSimulados type="simulados" />;
+
+const ManageStudents = () => {
+  const [students, setStudents] = useState([]);
+  const [turmas, setTurmas] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const q = query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno'));
+    const unsub1 = onValue(q, (snap) => {
+      if (snap.exists()) setStudents(Object.keys(snap.val()).map(k => ({ id: k, ...snap.val()[k] })));
+      else setStudents([]);
+    });
+    const unsub2 = onValue(ref(db, 'turmas'), (snap) => {
+      if (snap.exists()) setTurmas(Object.keys(snap.val()).map(k => ({ id: k, ...snap.val()[k] })));
+    });
+    return () => { unsub1(); unsub2(); };
+  }, []);
+
+  const handleAssignClass = async (studentId, turmaId) => {
+    await update(ref(db, `usuarios/${studentId}`), { turmaId });
+  };
+
+  const filtered = students.filter(s => s.nome?.toLowerCase().includes(searchTerm.toLowerCase()) || s.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <h3 className="text-xl font-bold">Gestão de Alunos</h3>
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+          <input type="text" placeholder="Buscar aluno..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full pl-10 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-gray-50 dark:bg-gray-700">
+              <th className="p-4 font-semibold">Nome</th>
+              <th className="p-4 font-semibold">E-mail</th>
+              <th className="p-4 font-semibold">Turma Vinculada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(student => (
+              <tr key={student.id} className="border-t dark:border-gray-700">
+                <td className="p-4 flex items-center gap-3">
+                  <img src={student.fotoUrl || 'https://via.placeholder.com/30'} className="w-8 h-8 rounded-full object-cover" alt="" />
+                  {student.nome}
+                </td>
+                <td className="p-4">{student.email}</td>
+                <td className="p-4">
+                  <select 
+                    value={student.turmaId || ''} 
+                    onChange={(e) => handleAssignClass(student.id, e.target.value)}
+                    className="p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 bg-transparent"
+                  >
+                    <option value="">-- Sem Turma --</option>
+                    {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const ManageGrades = () => {
+  const [simulados, setSimulados] = useState([]);
+  const [alunos, setAlunos] = useState([]);
+  const [selectedSim, setSelectedSim] = useState('');
+  const [grades, setGrades] = useState({});
+
+  useEffect(() => {
+    onValue(ref(db, 'simulados'), s => { if(s.exists()) setSimulados(Object.entries(s.val()).map(([id, v]) => ({ id, ...v }))) });
+    onValue(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno')), s => {
+      if(s.exists()) setAlunos(Object.entries(s.val()).map(([id, v]) => ({ id, ...v })));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSim) return;
+    onValue(ref(db, 'notas'), s => {
+      if(s.exists()) {
+        const allGrades = s.val();
+        const currentSimGrades = {};
+        // Estrutura: notas -> alunoId -> simId -> { lc, mt, ch, cn, red }
+        Object.keys(allGrades).forEach(alunoId => {
+          if (allGrades[alunoId][selectedSim]) {
+            currentSimGrades[alunoId] = allGrades[alunoId][selectedSim];
+          }
+        });
+        setGrades(currentSimGrades);
+      } else { setGrades({}); }
+    });
+  }, [selectedSim]);
+
+  const handleGradeChange = (alunoId, area, value) => {
+    setGrades(prev => ({
+      ...prev,
+      [alunoId]: { ...prev[alunoId], [area]: Number(value) }
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!selectedSim) return;
+    try {
+      // Calcular totais e salvar
+      const updates = {};
+      Object.keys(grades).forEach(alunoId => {
+        const g = grades[alunoId];
+        const lc = g.lc || 0, mt = g.mt || 0, ch = g.ch || 0, cn = g.cn || 0, red = g.red || 0;
+        const total = lc + mt + ch + cn + red;
+        updates[`notas/${alunoId}/${selectedSim}`] = { lc, mt, ch, cn, red, total };
+      });
+      await update(ref(db), updates);
+      alert("Notas salvas com sucesso!");
+    } catch (e) {
+      alert("Erro ao salvar: " + e.message);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 className="text-xl font-bold mb-6">Lançamento de Notas - Padrão ENEM</h3>
+      
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-2">Selecione o Simulado</label>
+        <select value={selectedSim} onChange={e=>setSelectedSim(e.target.value)} className="w-full md:w-1/2 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 bg-transparent">
+          <option value="">-- Selecione --</option>
+          {simulados.map(s => <option key={s.id} value={s.id}>{s.nome} ({s.data})</option>)}
+        </select>
+      </div>
+
+      {selectedSim && (
+        <>
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-700">
+                  <th className="p-3 font-semibold">Aluno</th>
+                  <th className="p-3 font-semibold">Linguagens</th>
+                  <th className="p-3 font-semibold">Matemática</th>
+                  <th className="p-3 font-semibold">Humanas</th>
+                  <th className="p-3 font-semibold">Natureza</th>
+                  <th className="p-3 font-semibold">Redação</th>
+                  <th className="p-3 font-semibold">Total (Auto)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alunos.map(a => {
+                  const g = grades[a.id] || {};
+                  const total = (g.lc||0) + (g.mt||0) + (g.ch||0) + (g.cn||0) + (g.red||0);
+                  return (
+                    <tr key={a.id} className="border-t dark:border-gray-700">
+                      <td className="p-3 font-medium">{a.nome}</td>
+                      {['lc', 'mt', 'ch', 'cn', 'red'].map(area => (
+                        <td key={area} className="p-3">
+                          <input 
+                            type="number" max="1000" min="0" 
+                            value={g[area] || ''} 
+                            onChange={(e) => handleGradeChange(a.id, area, e.target.value)}
+                            className="w-20 p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                          />
+                        </td>
+                      ))}
+                      <td className="p-3 font-bold text-blue-600 dark:text-blue-400">{total}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2">
+            <Save size={20} /> Salvar Todas as Notas
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
+const ManageMural = ({ user }) => {
+  const [posts, setPosts] = useState([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [link, setLink] = useState('');
+  const [yt, setYt] = useState('');
+  const [pinned, setPinned] = useState(false);
+  const [urgent, setUrgent] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    onValue(ref(db, 'mural'), snap => {
+      if(snap.exists()) {
+        const data = Object.entries(snap.val()).map(([id, v]) => ({ id, ...v }));
+        data.sort((a,b) => new Date(b.date) - new Date(a.date));
+        setPosts(data);
+      } else setPosts([]);
+    });
+  }, []);
+
+  const handlePost = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+    let imageUrl = '';
+    if (imageFile) {
+      imageUrl = await uploadImageToImgBB(imageFile);
+    }
+    
+    const post = {
+      title, content, link, yt, pinned, urgent,
+      imageUrl,
+      date: new Date().toISOString(),
+      author: user.displayName || user.email
+    };
+    
+    await push(ref(db, 'mural'), post);
+    setTitle(''); setContent(''); setLink(''); setYt(''); setPinned(false); setUrgent(false); setImageFile(null);
+    setUploading(false);
+  };
+
+  const handleDelete = async (id) => {
+    if(window.confirm("Apagar publicação?")) await remove(ref(db, `mural/${id}`));
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow p-6 h-fit">
+        <h3 className="text-xl font-bold mb-4">Nova Publicação</h3>
+        <form onSubmit={handlePost} className="space-y-4">
+          <input type="text" placeholder="Título do Aviso" required value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700" />
+          <textarea placeholder="Texto do aviso (suporta múltiplas linhas)..." required rows="4" value={content} onChange={e=>setContent(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700"></textarea>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-semibold flex items-center gap-2"><ImageIcon size={16}/> Imagem Anexa</label>
+            <input type="file" accept="image/*" onChange={e=>setImageFile(e.target.files[0])} className="w-full text-sm" />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-semibold flex items-center gap-2"><LinkIcon size={16}/> Link Externo</label>
+            <input type="url" placeholder="https://..." value={link} onChange={e=>setLink(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold flex items-center gap-2"><Video size={16}/> YouTube (URL)</label>
+            <input type="url" placeholder="https://youtube.com/watch?v=..." value={yt} onChange={e=>setYt(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700" />
+          </div>
+
+          <div className="flex gap-4 pt-2">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="checkbox" checked={pinned} onChange={e=>setPinned(e.target.checked)} /> <Pin size={16} className="text-blue-500"/> Fixar no Topo
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="checkbox" checked={urgent} onChange={e=>setUrgent(e.target.checked)} /> <AlertTriangle size={16} className="text-red-500"/> Aviso Urgente
+            </label>
+          </div>
+
+          <button type="submit" disabled={uploading} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold disabled:opacity-50 flex justify-center items-center gap-2">
+            {uploading ? <Spinner /> : 'Publicar no Mural'}
+          </button>
+        </form>
+      </div>
+
+      <div className="lg:col-span-2 space-y-4">
+        {posts.map(post => (
+          <div key={post.id} className={`bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden relative ${post.urgent ? 'border-l-4 border-red-500' : ''}`}>
+             <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h4 className="text-xl font-bold flex items-center gap-2">
+                    {post.pinned && <Pin size={20} className="text-blue-500" />}
+                    {post.urgent && <AlertTriangle size={20} className="text-red-500" />}
+                    {post.title}
+                  </h4>
+                  <button onClick={() => handleDelete(post.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full transition"><Trash2 size={16}/></button>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">{new Date(post.date).toLocaleString()} • Por {post.author}</p>
+                <div className="whitespace-pre-wrap mb-4">{post.content}</div>
+                
+                {post.imageUrl && (
+                  <a href={post.imageUrl} target="_blank" rel="noreferrer" title="Clique para ampliar">
+                    <img src={post.imageUrl} alt="Anexo" className="rounded-lg max-h-64 object-cover mb-4 cursor-zoom-in" />
+                  </a>
+                )}
+
+                {post.yt && (
+                  <div className="aspect-w-16 aspect-h-9 mb-4">
+                    <iframe src={post.yt.replace('watch?v=', 'embed/')} className="w-full h-64 rounded-lg" frameBorder="0" allowFullScreen></iframe>
+                  </div>
+                )}
+
+                {post.link && (
+                  <a href={post.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-blue-600 hover:underline bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
+                    <LinkIcon size={16} /> Acessar Link Anexado
+                  </a>
+                )}
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ManageCertificates = ({ user }) => {
+  const [alunos, setAlunos] = useState([]);
+  const [simulados, setSimulados] = useState([]);
+  
+  const [selectedAluno, setSelectedAluno] = useState('');
+  const [selectedSim, setSelectedSim] = useState('');
+  const [horas, setHoras] = useState('4');
+  const [instituicao, setInstituicao] = useState('PortalENEM Educacional');
+  const [logoFile, setLogoFile] = useState(null);
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [certToPrint, setCertToPrint] = useState(null);
+
+  useEffect(() => {
+    onValue(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno')), s => {
+      if(s.exists()) setAlunos(Object.entries(s.val()).map(([id, v]) => ({ id, ...v })));
+    });
+    onValue(ref(db, 'simulados'), s => {
+      if(s.exists()) setSimulados(Object.entries(s.val()).map(([id, v]) => ({ id, ...v })));
+    });
+  }, []);
+
+  const handleGenerate = async (e) => {
+    e.preventDefault();
+    if(!selectedAluno || !selectedSim) return alert("Selecione aluno e atividade.");
+    setIsGenerating(true);
+
+    const aluno = alunos.find(a => a.id === selectedAluno);
+    const sim = simulados.find(s => s.id === selectedSim);
+    const validationCode = Math.random().toString(36).substring(2, 10).toUpperCase() + Date.now().toString(36).toUpperCase();
+
+    let logoUrl = '';
+    if (logoFile) logoUrl = await uploadImageToImgBB(logoFile);
+
+    const certData = {
+      alunoId: aluno.id,
+      alunoNome: aluno.nome,
+      turmaId: aluno.turmaId || 'Geral',
+      simuladoNome: sim.nome,
+      horas,
+      instituicao,
+      logoUrl,
+      dataEmissao: new Date().toISOString(),
+      codigo: validationCode,
+      professor: user.displayName || user.email
+    };
+
+    const newRef = await push(ref(db, 'certificados'), certData);
+    setIsGenerating(false);
+    setCertToPrint({ id: newRef.key, ...certData });
+  };
+
+  if (certToPrint) {
+    return <CertificatePrintView cert={certToPrint} onClose={() => setCertToPrint(null)} />;
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 max-w-3xl mx-auto">
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Award /> Emitir Certificado Individual</h3>
+      
+      <form onSubmit={handleGenerate} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Aluno</label>
+            <select required value={selectedAluno} onChange={e=>setSelectedAluno(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700">
+              <option value="">-- Selecione o Aluno --</option>
+              {alunos.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Simulado/Atividade</label>
+            <select required value={selectedSim} onChange={e=>setSelectedSim(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700">
+              <option value="">-- Selecione --</option>
+              {simulados.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Carga Horária (horas)</label>
+            <input type="number" required value={horas} onChange={e=>setHoras(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Nome da Instituição</label>
+            <input type="text" required value={instituicao} onChange={e=>setInstituicao(e.target.value)} className="w-full p-3 border rounded-lg dark:bg-gray-700" />
+          </div>
+        </div>
+
+        <div>
+           <label className="block text-sm font-medium mb-1">Logotipo (Opcional)</label>
+           <input type="file" accept="image/*" onChange={e=>setLogoFile(e.target.files[0])} className="w-full p-2 border rounded-lg dark:bg-gray-700" />
+        </div>
+
+        <button type="submit" disabled={isGenerating} className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold p-4 rounded-lg flex justify-center items-center gap-2 transition">
+          {isGenerating ? <Spinner /> : <><Printer size={20} /> Gerar e Visualizar Certificado</>}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// --- VIEWS DO ALUNO ---
+
+const StudentDashboard = ({ user }) => {
+  const [minhasNotas, setMinhasNotas] = useState({});
+  const [simulados, setSimulados] = useState({});
+
+  useEffect(() => {
+    onValue(ref(db, `notas/${user.uid}`), s => { if(s.exists()) setMinhasNotas(s.val()) });
+    onValue(ref(db, 'simulados'), s => { if(s.exists()) setSimulados(s.val()) });
+  }, [user.uid]);
+
+  const examKeys = Object.keys(minhasNotas);
+  const latestExamId = examKeys[examKeys.length - 1];
+  const latestGrades = latestExamId ? minhasNotas[latestExamId] : null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl p-8 shadow-lg">
+        <h2 className="text-3xl font-bold mb-2">Seu Painel de Desempenho</h2>
+        <p className="text-blue-100">Acompanhe sua evolução e prepare-se para o ENEM.</p>
+      </div>
+
+      {latestGrades ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h3 className="text-xl font-bold mb-6">Último Simulado: {simulados[latestExamId]?.nome}</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <GradeCard title="Linguagens" score={latestGrades.lc} color="bg-pink-500" />
+            <GradeCard title="Matemática" score={latestGrades.mt} color="bg-blue-500" />
+            <GradeCard title="Humanas" score={latestGrades.ch} color="bg-yellow-500" />
+            <GradeCard title="Natureza" score={latestGrades.cn} color="bg-green-500" />
+            <GradeCard title="Redação" score={latestGrades.red} color="bg-purple-500" />
+          </div>
+
+          <div className="mt-8 pt-6 border-t dark:border-gray-700 text-center">
+             <p className="text-sm text-gray-500">Pontuação Total</p>
+             <p className="text-4xl font-black text-gray-800 dark:text-white mt-1">{latestGrades.total}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center text-gray-500">
+          <BarChart2 size={48} className="mx-auto mb-4 opacity-50" />
+          <p>Nenhuma nota lançada ainda. Faça simulados para ver seus gráficos!</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const GradeCard = ({ title, score, color }) => {
+  const heightPercent = score ? Math.min((score / 1000) * 100, 100) : 0;
+  return (
+    <div className="flex flex-col items-center">
+      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg h-48 relative flex items-end justify-center overflow-hidden">
+        <div className={`w-full ${color} transition-all duration-1000 ease-out`} style={{ height: `${heightPercent}%` }}></div>
+        <span className="absolute bottom-2 text-white font-bold drop-shadow-md">{score || 0}</span>
+      </div>
+      <div className="w-full text-center p-2 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-600 rounded-b-lg">
+        <p className="text-xs font-semibold truncate" title={title}>{title}</p>
+      </div>
+    </div>
+  );
+};
+
+const StudentGrades = ({ user }) => {
+  const [notas, setNotas] = useState({});
+  const [simulados, setSimulados] = useState({});
+
+  useEffect(() => {
+    onValue(ref(db, `notas/${user.uid}`), s => { if(s.exists()) setNotas(s.val()) });
+    onValue(ref(db, 'simulados'), s => { if(s.exists()) setSimulados(s.val()) });
+  }, [user.uid]);
+
+  const exportPDF = () => { window.print(); };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6" id="printable-area">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold">Histórico Escolar / Boletim</h3>
+        <button onClick={exportPDF} className="no-print bg-gray-800 hover:bg-black text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
+          <Download size={16} /> Exportar PDF
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+         <table className="w-full text-left text-sm border-collapse border dark:border-gray-700">
+           <thead>
+             <tr className="bg-gray-100 dark:bg-gray-700">
+               <th className="p-3 border dark:border-gray-600 font-bold">Simulado</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center">LC</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center">MT</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center">CH</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center">CN</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center">RED</th>
+               <th className="p-3 border dark:border-gray-600 font-bold text-center bg-blue-50 dark:bg-blue-900/20">TOTAL</th>
+             </tr>
+           </thead>
+           <tbody>
+             {Object.keys(notas).length === 0 && <tr><td colSpan="7" className="p-4 text-center">Nenhum registro.</td></tr>}
+             {Object.entries(notas).map(([simId, g]) => (
+               <tr key={simId} className="border-t dark:border-gray-700">
+                 <td className="p-3 border dark:border-gray-600 font-medium">{simulados[simId]?.nome || 'Desconhecido'}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center">{g.lc}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center">{g.mt}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center">{g.ch}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center">{g.cn}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center">{g.red}</td>
+                 <td className="p-3 border dark:border-gray-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20">{g.total}</td>
+               </tr>
+             ))}
+           </tbody>
+         </table>
+      </div>
+      <div className="mt-8 text-xs text-gray-500 hidden print:block text-center">
+        Documento gerado pelo PortalENEM em {new Date().toLocaleDateString()}.
+      </div>
+    </div>
+  );
+};
+
+const StudentMural = () => {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    onValue(ref(db, 'mural'), snap => {
+      if(snap.exists()) {
+        const data = Object.entries(snap.val()).map(([id, v]) => ({ id, ...v }));
+        data.sort((a,b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return new Date(b.date) - new Date(a.date);
+        });
+        setPosts(data);
+      } else setPosts([]);
+    });
+  }, []);
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {posts.map(post => (
+        <div key={post.id} className={`bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden relative ${post.urgent ? 'border-l-4 border-red-500' : ''}`}>
+           <div className="p-6">
+              <h4 className="text-xl font-bold flex items-center gap-2 mb-2">
+                {post.pinned && <Pin size={20} className="text-blue-500" />}
+                {post.urgent && <AlertTriangle size={20} className="text-red-500" />}
+                {post.title}
+              </h4>
+              <p className="text-sm text-gray-500 mb-4">{new Date(post.date).toLocaleString()} • Por {post.author}</p>
+              <div className="whitespace-pre-wrap mb-4 text-gray-800 dark:text-gray-200">{post.content}</div>
+              
+              {post.imageUrl && (
+                <a href={post.imageUrl} target="_blank" rel="noreferrer" title="Clique para ampliar na qualidade original">
+                  <img src={post.imageUrl} alt="Anexo" className="rounded-lg max-h-96 object-contain bg-gray-100 dark:bg-gray-900 w-full mb-4 cursor-zoom-in" />
+                </a>
+              )}
+
+              {post.yt && (
+                <div className="aspect-w-16 aspect-h-9 mb-4">
+                  <iframe src={post.yt.replace('watch?v=', 'embed/')} className="w-full h-[400px] rounded-lg" frameBorder="0" allowFullScreen></iframe>
+                </div>
+              )}
+
+              {post.link && (
+                <a href={post.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-blue-600 hover:underline bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
+                  <LinkIcon size={16} /> Acessar Link Externo
+                </a>
+              )}
+           </div>
+        </div>
+      ))}
+      {posts.length === 0 && <p className="text-center text-gray-500">Nenhum aviso no mural.</p>}
+    </div>
+  );
+};
+
+const StudentCertificates = ({ user }) => {
+  const [certs, setCerts] = useState([]);
+  const [viewCert, setViewCert] = useState(null);
+
+  useEffect(() => {
+    onValue(query(ref(db, 'certificados'), orderByChild('alunoId'), equalTo(user.uid)), snap => {
+      if(snap.exists()) setCerts(Object.entries(snap.val()).map(([id, v]) => ({ id, ...v })));
+      else setCerts([]);
+    });
+  }, [user.uid]);
+
+  if (viewCert) {
+    return <CertificatePrintView cert={viewCert} onClose={() => setViewCert(null)} />;
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Award /> Meus Certificados</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {certs.map(cert => (
+          <div key={cert.id} className="border dark:border-gray-700 rounded-xl p-6 flex flex-col items-center text-center hover:shadow-lg transition">
+             <Award size={48} className="text-yellow-500 mb-4" />
+             <h4 className="font-bold text-lg mb-2 line-clamp-2">{cert.simuladoNome}</h4>
+             <p className="text-sm text-gray-500 mb-4">Emitido em: {new Date(cert.dataEmissao).toLocaleDateString()}</p>
+             <button onClick={() => setViewCert(cert)} className="mt-auto w-full bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 font-semibold py-2 rounded-lg flex justify-center items-center gap-2">
+               <Download size={18} /> Visualizar / PDF
+             </button>
+          </div>
+        ))}
+        {certs.length === 0 && <p className="col-span-full text-center text-gray-500 py-8">Você ainda não possui certificados.</p>}
+      </div>
+    </div>
+  );
+};
+
+// --- VISUALIZADOR DE CERTIFICADO (A4 PARA IMPRESSÃO) ---
+
+const CertificatePrintView = ({ cert, onClose }) => {
+  const handlePrint = () => { window.print(); };
+  
+  // URL para QR Code (simulando a rota de validação)
+  const validationUrl = `${window.location.origin}?validate=${cert.codigo}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(validationUrl)}`;
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-gray-900 overflow-y-auto">
+      {/* Action Bar (No Print) */}
+      <div className="no-print bg-gray-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
+        <button onClick={onClose} className="flex items-center gap-2 hover:bg-gray-700 px-4 py-2 rounded transition">
+          <X size={20} /> Fechar
+        </button>
+        <button onClick={handlePrint} className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-2 rounded transition">
+          <Printer size={20} /> Imprimir / Salvar PDF
+        </button>
+      </div>
+
+      {/* A4 Canvas */}
+      <div className="flex justify-center p-8 no-print">
+        <div id="printable-area" className="bg-white text-black w-[297mm] h-[210mm] shadow-2xl relative flex flex-col items-center justify-center p-16 print:shadow-none print:p-0 print:w-full print:h-full box-border border-8 border-double border-gray-300">
+          
+          <div className="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center overflow-hidden">
+             <Award size={800} />
+          </div>
+
+          <div className="z-10 w-full h-full flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-8">
+              {cert.logoUrl ? (
+                <img src={cert.logoUrl} alt="Logo" className="h-24 object-contain" />
+              ) : (
+                <div className="h-24 flex items-center font-serif text-2xl font-bold text-gray-800">{cert.instituicao}</div>
+              )}
+              <div className="text-right text-gray-500 text-sm">
+                Código de Validação:<br/>
+                <span className="font-mono text-black font-bold text-lg">{cert.codigo}</span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-20">
+               <h1 className="text-6xl font-serif font-bold text-gray-800 mb-12 tracking-widest uppercase">Certificado</h1>
+               
+               <p className="text-2xl text-gray-600 mb-6">Certificamos que</p>
+               <h2 className="text-5xl font-bold text-gray-900 mb-8 border-b border-gray-400 pb-2 inline-block min-w-[60%]">{cert.alunoNome}</h2>
+               
+               <p className="text-xl text-gray-700 leading-relaxed max-w-4xl mx-auto">
+                 concluiu com êxito a atividade acadêmica <span className="font-bold">{cert.simuladoNome}</span>, 
+                 com carga horária de <span className="font-bold">{cert.horas} horas</span>, promovida 
+                 pela instituição <span className="font-bold">{cert.instituicao}</span>.
+               </p>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-12 flex justify-between items-end border-t-2 border-gray-200 pt-8">
+              <div className="flex items-center gap-4">
+                <img src={qrCodeUrl} alt="QR Code" className="w-24 h-24" />
+                <div className="text-sm text-gray-500 text-left">
+                  Escaneie o QR Code ou acesse o sistema<br/>
+                  para verificar a autenticidade deste documento.
+                </div>
+              </div>
+              
+              <div className="text-center w-80">
+                <div className="border-t border-black mb-2 pt-2 text-lg font-serif italic text-gray-800">{cert.professor}</div>
+                <p className="text-sm text-gray-500">Professor / Coordenação</p>
+                <p className="text-sm text-gray-500 mt-2">Emitido em {new Date(cert.dataEmissao).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- ÁREA PÚBLICA DE VALIDAÇÃO ---
+
+const PublicValidationView = ({ code: initialCode, onBack, darkMode, setDarkMode }) => {
+  const [code, setCode] = useState(initialCode || '');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleValidate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setResult(null);
+
+    const q = query(ref(db, 'certificados'), orderByChild('codigo'), equalTo(code.trim().toUpperCase()));
+    get(q).then(snap => {
+      if(snap.exists()) {
+        const data = snap.val();
+        setResult(Object.values(data)[0]);
+      } else {
+        setResult('NOT_FOUND');
+      }
+      setLoading(false);
+    });
+  };
+
+  return (
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 transition-colors ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="absolute top-4 right-4 flex gap-4">
+         <button onClick={onBack} className="flex items-center gap-2 hover:underline">Voltar ao Login</button>
+         <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow">
+            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+      </div>
+
+      <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+        <ShieldCheck size={64} className="mx-auto text-blue-600 mb-6" />
+        <h1 className="text-3xl font-bold mb-2">Validação de Certificado</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Insira o código único para verificar a autenticidade de um documento emitido pelo PortalENEM.</p>
+
+        <form onSubmit={handleValidate} className="flex gap-2 mb-8">
+          <input 
+            type="text" 
+            placeholder="Ex: A1B2C3D4..." 
+            required 
+            value={code} 
+            onChange={e => setCode(e.target.value.toUpperCase())}
+            className="flex-1 p-4 text-center font-mono font-bold text-xl border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 uppercase"
+          />
+          <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg font-bold transition flex items-center justify-center">
+            {loading ? <Spinner /> : 'Validar'}
+          </button>
+        </form>
+
+        {result === 'NOT_FOUND' && (
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 p-6 rounded-xl flex items-center gap-4">
+            <X size={32} />
+            <div className="text-left">
+              <h3 className="font-bold text-lg">Certificado Inválido</h3>
+              <p>O código informado não foi encontrado em nossa base de dados.</p>
+            </div>
+          </div>
+        )}
+
+        {result && result !== 'NOT_FOUND' && (
+          <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-6 rounded-xl flex flex-col items-start text-left gap-4 border border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-3 w-full border-b border-green-200 dark:border-green-800 pb-4">
+              <CheckCircle size={32} />
+              <div>
+                <h3 className="font-bold text-xl">Certificado Válido e Autêntico</h3>
+                <p className="text-sm">Emitido por {result.instituicao}</p>
+              </div>
+            </div>
+            <div className="space-y-2 w-full text-sm">
+              <p><strong>Aluno:</strong> {result.alunoNome}</p>
+              <p><strong>Atividade:</strong> {result.simuladoNome}</p>
+              <p><strong>Carga Horária:</strong> {result.horas} horas</p>
+              <p><strong>Data de Emissão:</strong> {new Date(result.dataEmissao).toLocaleDateString()}</p>
+              <p><strong>Emissor:</strong> {result.professor}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
