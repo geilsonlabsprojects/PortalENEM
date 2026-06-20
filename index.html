@@ -233,7 +233,7 @@
             getDatabase, ref, set, push, get, onValue, remove, update, query, orderByChild, equalTo 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Configurações do Firebase fornecidas pelo usuário (Realtime Database Módulo Professor - usado como base única)
+        // Configurações do Firebase fornecidas pelo utilizador
         const firebaseConfig = {
             apiKey: "AIzaSyAEDi-eQJgTc_IW1s-pd0dcjQTFBpb9dLM",
             authDomain: "portalsimulado-88969.firebaseapp.com",
@@ -247,19 +247,20 @@
 
         const IMGBB_API_KEY = "f7722de0484f8d2059ce8ad1604be00b";
 
-        // Inicialização
+        // Inicialização do Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Estado Global
+        // Estado Global da Aplicação
         let currentUser = null;
         let userData = null;
         let currentView = 'dashboard';
         let isLoginMode = true;
-        let activeListeners = []; // Para limpar listeners do RTDB ao trocar de tela
+        let activeListeners = []; // Para limpar ouvintes do RTDB ao trocar de ecrã
+        let userListenerUnsubscribe = null; // Ouvinte em tempo real do perfil de utilizador
         
-        // Estado temporário para notas
+        // Estado temporário para as notas
         window.tempGrades = {};
 
         // === UTILITÁRIOS GLOBAIS ===
@@ -289,29 +290,40 @@
 
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        // === GERENCIAMENTO DE AUTENTICAÇÃO ===
+        // === GERENCIAMENTO DE AUTENTICAÇÃO COM PROTEÇÃO DE CONCORRÊNCIA ===
 
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
+            // Limpa o ouvinte anterior do utilizador se existir
+            if (userListenerUnsubscribe) {
+                userListenerUnsubscribe();
+                userListenerUnsubscribe = null;
+            }
+
             if (user) {
                 currentUser = user;
-                // Buscar perfil no BD
                 const userRef = ref(db, `usuarios/${user.uid}`);
-                const snapshot = await get(userRef);
                 
-                if (snapshot.exists()) {
-                    userData = snapshot.val();
-                } else {
-                    // Primeiro login via Google, criar como aluno
-                    userData = {
-                        nome: user.displayName || 'Usuário do Sistema',
-                        email: user.email,
-                        role: 'aluno',
-                        fotoUrl: user.photoURL || ''
-                    };
-                    await set(userRef, userData);
-                }
-                
-                initApp();
+                // Escuta o nó do utilizador em tempo real. Evita conflitos quando o registo ainda está a ser gravado.
+                userListenerUnsubscribe = onValue(userRef, async (snapshot) => {
+                    if (snapshot.exists()) {
+                        userData = snapshot.val();
+                        initApp();
+                    } else {
+                        // Se o utilizador não existe e veio pelo login do Google, cria o perfil automaticamente
+                        const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                        if (isGoogle) {
+                            userData = {
+                                nome: user.displayName || 'Usuário do Sistema',
+                                email: user.email,
+                                role: 'aluno',
+                                fotoUrl: user.photoURL || ''
+                            };
+                            await set(userRef, userData);
+                        }
+                        // Se for registo por E-mail/Senha, não faz nada e aguarda que o "handleAuth" faça a gravação,
+                        // o que irá despoletar este listener novamente com os dados corretos.
+                    }
+                });
             } else {
                 currentUser = null;
                 userData = null;
@@ -356,11 +368,18 @@
                 } else {
                     const name = document.getElementById('auth-name').value;
                     const role = document.getElementById('auth-role').value;
+                    
+                    // Cria o utilizador no Authentication primeiro
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     
+                    // Grava explicitamente o utilizador no Realtime Database com a sua função (Role) correta
                     await set(ref(db, `usuarios/${cred.user.uid}`), {
-                        nome: name, email, role, fotoUrl: ''
+                        nome: name, 
+                        email: email, 
+                        role: role, 
+                        fotoUrl: ''
                     });
+                    
                     window.showToast('Cadastro realizado. Acesso liberado.', 'success');
                 }
             } catch (error) {
@@ -379,6 +398,10 @@
         };
 
         window.logout = () => {
+            if (userListenerUnsubscribe) {
+                userListenerUnsubscribe();
+                userListenerUnsubscribe = null;
+            }
             signOut(auth);
         };
 
@@ -396,7 +419,7 @@
             document.getElementById('validation-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
             
-            // Popula dados do usuário
+            // Popula dados do utilizador
             document.getElementById('user-name').innerText = userData.nome;
             document.getElementById('user-role').innerText = userData.role;
             document.getElementById('user-avatar').src = userData.fotoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.nome) + '&background=1e3a8a&color=fff';
@@ -658,7 +681,7 @@
 
         window.assignClass = async (studentId, turmaId) => {
             await update(ref(db, `usuarios/${studentId}`), { turmaId });
-            window.showToast('Enturmação atualizada.', 'success');
+            window.showToast('Enturmação actualizada com sucesso.', 'success');
         };
 
         function renderManageGrades(container) {
@@ -1044,7 +1067,7 @@
                 let html = '';
                 snap.forEach(child => {
                     const c = child.val();
-                    // Armazena no window temporalmente para o clique
+                    // Armazena no window temporariamente para o clique
                     window[`cert_${child.key}`] = c;
                     html += `
                         <div class="border border-slate-200 rounded-sm p-6 text-center bg-white shadow-sm hover:border-brand-primary transition">
