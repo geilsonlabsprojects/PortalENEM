@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Acadêmico - Gestão de Simulados</title>
+    <title>Portal Acadêmico - Gestão Inteligente</title>
     
-    <!-- Tailwind CSS para Estilização -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Phosphor Icons (Ícones profissionais e limpos) -->
+    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Configuração de Tema Tailwind para Visual Tradicional -->
+    <!-- Configuração de Tema Moderno -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#0f172a',    // Azul escuro corporativo
-                            primary: '#1e3a8a', // Azul institucional
-                            light: '#eff6ff',
-                            accent: '#2563eb'
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6', // Azul principal moderno
+                            600: '#2563eb', // Azul hover
+                            900: '#1e3a8a', // Azul escuro
+                            950: '#0f172a', // Quase preto (Backgrounds de menu)
                         }
                     },
                     fontFamily: {
-                        sans: ['Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+                        sans: ['Inter', 'Segoe UI', 'Roboto', 'sans-serif']
                     }
                 }
             }
@@ -33,207 +35,309 @@
     </script>
 
     <style>
-        /* Estilos base para uma interface mais rígida e tradicional */
-        body { background-color: #f8fafc; color: #334155; }
+        /* Importando fonte Inter para um visual mais limpo */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body { 
+            background-color: #f8fafc; 
+            color: #334155; 
+            font-family: 'Inter', sans-serif;
+        }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Estilo Tradicional de Tabelas */
-        .table-standard { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .table-standard th { background-color: #f1f5f9; color: #475569; font-weight: 600; text-align: left; padding: 12px; border: 1px solid #e2e8f0; font-size: 0.875rem; text-transform: uppercase; }
-        .table-standard td { padding: 12px; border: 1px solid #e2e8f0; font-size: 0.875rem; vertical-align: middle; }
-        .table-standard tr:nth-child(even) { background-color: #f8fafc; }
-        .table-standard tr:hover { background-color: #f1f5f9; }
-
-        /* Inputs Tradicionais */
-        .input-standard { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.875rem; background-color: white; transition: border-color 0.2s; }
-        .input-standard:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+        /* Componentes Base */
+        .input-modern { 
+            width: 100%; 
+            padding: 0.75rem 1rem; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.75rem; /* rounded-xl */
+            font-size: 0.875rem; 
+            background-color: #f8fafc; 
+            transition: all 0.2s; 
+        }
+        .input-modern:focus { 
+            outline: none; 
+            border-color: #3b82f6; 
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); 
+        }
         
-        /* Botões Tradicionais */
-        .btn-primary { background-color: #1e3a8a; color: white; padding: 8px 16px; border-radius: 4px; font-weight: 500; font-size: 0.875rem; border: 1px solid #1e3a8a; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-        .btn-primary:hover { background-color: #1e40af; }
-        .btn-secondary { background-color: white; color: #475569; padding: 8px 16px; border-radius: 4px; font-weight: 500; font-size: 0.875rem; border: 1px solid #cbd5e1; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-        .btn-secondary:hover { background-color: #f8fafc; }
-        .btn-danger { background-color: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.875rem; cursor: pointer; }
-        .btn-danger:hover { background-color: #b91c1c; }
+        .btn-modern { 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 0.75rem; 
+            font-weight: 600; 
+            font-size: 0.875rem; 
+            transition: all 0.2s; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 0.5rem; 
+            cursor: pointer; 
+        }
+        .btn-primary { background-color: #2563eb; color: white; border: 1px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-primary:hover:not(:disabled) { background-color: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .btn-secondary { background-color: white; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-secondary:hover:not(:disabled) { background-color: #f1f5f9; }
 
-        /* Cartões */
-        .card { background: white; border: 1px solid #e2e8f0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; }
-        .card-header { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+        /* Cartões Modernos */
+        .card-modern { 
+            background: white; 
+            border: 1px solid #f1f5f9; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); 
+            padding: 1.5rem; 
+        }
 
-        /* Toasts */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 12px 20px; border-radius: 4px; color: white; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; }
-        .toast.success { background-color: #16a34a; border-left: 4px solid #14532d; }
-        .toast.error { background-color: #dc2626; border-left: 4px solid #7f1d1d; }
-        .toast.info { background-color: #2563eb; border-left: 4px solid #1e3a8a; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        /* Tabelas Clean */
+        .table-clean { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .table-clean th { background-color: #f8fafc; color: #64748b; font-weight: 600; text-align: left; padding: 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+        .table-clean th:first-child { border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; }
+        .table-clean th:last-child { border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
+        .table-clean td { padding: 1rem; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .table-clean tr:hover td { background-color: #f8fafc; }
+        .table-clean tr:last-child td { border-bottom: none; }
+
+        /* Toasts Redesenhados */
+        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; }
+        .toast { padding: 1rem 1.25rem; border-radius: 0.75rem; background: white; color: #1e293b; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-left: 4px solid; animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .toast.success { border-left-color: #10b981; }
+        .toast.success i { color: #10b981; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.error i { color: #ef4444; }
+        .toast.info { border-left-color: #3b82f6; }
+        .toast.info i { color: #3b82f6; }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Modal */
+        .modal-overlay { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); animation: fadeIn 0.2s ease-out; }
+
+        /* Spinners */
+        .spinner { border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 2px solid currentColor; width: 1.25rem; height: 1.25rem; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Ocultar elementos na impressão */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; background: white;}
             .no-print { display: none !important; }
         }
-
-        /* Loading Spinner */
-        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-brand-100 selection:text-brand-900">
 
     <!-- Toast Notifications -->
     <div id="toast-container"></div>
 
-    <!-- TELA DE LOGIN -->
-    <div id="login-view" class="min-h-screen flex flex-col justify-center items-center bg-slate-100 p-4">
-        <div class="w-full max-w-md bg-white border border-slate-300 rounded-sm shadow-sm overflow-hidden">
-            <div class="bg-brand-dark p-6 text-center text-white border-b-4 border-brand-accent">
-                <i class="ph ph-buildings text-5xl mb-2"></i>
-                <h1 class="text-2xl font-bold tracking-wide uppercase">Sistema Acadêmico</h1>
-                <p class="text-sm text-slate-300 mt-1">Gestão de Simulados e Resultados</p>
+    <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
+    <div id="auth-view" class="min-h-screen flex flex-col justify-center items-center p-4 relative overflow-hidden bg-slate-50">
+        <!-- Elementos decorativos de fundo -->
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-500/10 blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 blur-3xl"></div>
+
+        <div class="w-full max-w-[420px] bg-white rounded-2xl shadow-xl z-10 overflow-hidden border border-slate-100">
+            <!-- Header do Card -->
+            <div class="p-8 pb-6 text-center">
+                <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                    <i class="ph-fill ph-graduation-cap text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">Portal Acadêmico</h1>
+                <p class="text-sm text-slate-500 mt-1">Gestão inteligente e simplificada</p>
             </div>
             
-            <div class="p-6">
-                <h2 id="login-title" class="text-lg font-semibold text-slate-700 mb-4 border-b pb-2">Acesso Restrito</h2>
-                
-                <form id="login-form" class="space-y-4" onsubmit="window.handleAuth(event)">
-                    <div id="register-fields" style="display: none;">
-                        <label class="block text-sm font-semibold text-slate-600 mb-1">Nome Completo</label>
-                        <input type="text" id="auth-name" class="input-standard">
-                        
-                        <label class="block text-sm font-semibold text-slate-600 mt-3 mb-1">Perfil de Usuário</label>
-                        <select id="auth-role" class="input-standard">
-                            <option value="aluno">Aluno(a)</option>
-                            <option value="professor">Professor(a)</option>
-                        </select>
+            <!-- Abas Login/Cadastro -->
+            <div class="flex border-b border-slate-100">
+                <button onclick="window.switchAuthTab('login')" id="tab-login" class="flex-1 py-3 text-sm font-semibold border-b-2 text-brand-600 border-brand-600 transition-colors">Entrar</button>
+                <button onclick="window.switchAuthTab('register')" id="tab-register" class="flex-1 py-3 text-sm font-semibold border-b-2 text-slate-400 border-transparent hover:text-slate-600 transition-colors">Criar Conta</button>
+            </div>
+
+            <div class="p-8 pt-6">
+                <form id="auth-form" class="space-y-4" onsubmit="window.handleAuth(event)">
+                    
+                    <!-- Campos Específicos de Cadastro -->
+                    <div id="register-fields" style="display: none;" class="space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
+                            <input type="text" id="auth-name" class="input-modern" placeholder="Ex: João da Silva">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Perfil de Acesso</label>
+                            <select id="auth-role" class="input-modern bg-white">
+                                <option value="aluno">Sou Aluno(a)</option>
+                                <option value="professor">Sou Professor(a)</option>
+                            </select>
+                        </div>
                     </div>
 
+                    <!-- Campos Comuns -->
                     <div>
-                        <label class="block text-sm font-semibold text-slate-600 mb-1">E-mail Institucional ou Pessoal</label>
-                        <input type="email" id="auth-email" required class="input-standard" placeholder="usuario@escola.com">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+                        <input type="email" id="auth-email" required class="input-modern" placeholder="seu@email.com">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-slate-600 mb-1">Senha de Acesso</label>
-                        <input type="password" id="auth-password" required class="input-standard" placeholder="••••••••">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-slate-700">Senha</label>
+                            <button type="button" id="btn-forgot-password" onclick="window.openForgotPassword()" class="text-xs text-brand-600 hover:text-brand-800 font-medium">Esqueceu a senha?</button>
+                        </div>
+                        <input type="password" id="auth-password" required class="input-modern" placeholder="••••••••">
                     </div>
 
-                    <button type="submit" id="auth-submit-btn" class="w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 px-4 rounded-sm transition flex justify-center items-center h-10 mt-2">
-                        <span>Entrar no Sistema</span>
+                    <button type="submit" id="btn-submit-auth" class="w-full btn-modern btn-primary mt-6">
+                        <span>Acessar Plataforma</span>
                     </button>
                 </form>
 
-                <div class="mt-4 pt-4 border-t border-slate-200 text-center">
-                    <button type="button" onclick="window.handleGoogleLogin()" class="w-full btn-secondary justify-center text-slate-700 mb-4">
-                        <i class="ph ph-google-logo text-lg text-red-500"></i> Entrar com Google
-                    </button>
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                        <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-slate-400">ou</span></div>
+                    </div>
                     
-                    <p class="text-sm text-slate-600">
-                        <span id="auth-toggle-text">Não possui cadastro?</span>
-                        <a href="#" onclick="window.toggleAuthMode(event)" id="auth-toggle-btn" class="text-brand-accent font-semibold hover:underline">Solicitar Acesso</a>
-                    </p>
+                    <button type="button" onclick="window.handleGoogleLogin()" class="w-full btn-modern btn-secondary mt-4 group">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 group-hover:scale-110 transition-transform">
+                        Continuar com Google
+                    </button>
                 </div>
             </div>
             
-            <div class="bg-slate-50 p-4 border-t border-slate-200 text-center">
-                <button onclick="window.showValidationView()" class="text-sm text-slate-600 hover:text-brand-dark font-medium inline-flex items-center gap-1">
-                    <i class="ph ph-seal-check"></i> Validar Autenticidade de Certificado
+            <!-- Link Validação -->
+            <div class="bg-slate-50 p-4 border-t border-slate-100 text-center">
+                <button onclick="window.showValidationView()" class="text-sm text-slate-600 hover:text-brand-600 font-medium inline-flex items-center gap-1.5 transition-colors">
+                    <i class="ph ph-shield-check text-lg"></i> Validar Certificado Público
                 </button>
             </div>
         </div>
-        <div class="mt-8 text-xs text-slate-400 text-center">
-            &copy; 2026 Portal Institucional. Todos os direitos reservados.
+    </div>
+
+    <!-- MODAL ESQUECI A SENHA -->
+    <div id="modal-forgot-password" class="fixed inset-0 z-50 flex items-center justify-center modal-overlay" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 relative">
+            <button onclick="window.closeForgotPassword()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="ph ph-envelope-simple text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Recuperar Senha</h3>
+                <p class="text-sm text-slate-500 mt-1">Enviaremos um link seguro para o seu e-mail para você redefinir sua senha.</p>
+            </div>
+            <form onsubmit="window.handlePasswordReset(event)">
+                <input type="email" id="reset-email" required class="input-modern mb-4" placeholder="Digite seu e-mail de acesso">
+                <button type="submit" id="btn-send-reset" class="w-full btn-modern btn-primary">Enviar Link de Recuperação</button>
+            </form>
         </div>
     </div>
 
     <!-- TELA DE VALIDAÇÃO PÚBLICA -->
-    <div id="validation-view" class="min-h-screen flex-col justify-center items-center bg-slate-100 p-4" style="display: none;">
-        <div class="w-full max-w-lg bg-white border border-slate-300 rounded-sm shadow-sm p-8 text-center relative">
-            <button onclick="window.hideValidationView()" class="absolute top-4 left-4 text-slate-500 hover:text-slate-800 flex items-center gap-1 text-sm">
-                <i class="ph ph-arrow-left"></i> Voltar ao Login
+    <div id="validation-view" class="min-h-screen flex flex-col justify-center items-center p-4 bg-slate-50" style="display: none;">
+        <div class="w-full max-w-lg card-modern text-center relative">
+            <button onclick="window.hideValidationView()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-700 flex items-center gap-2 text-sm font-medium transition-colors">
+                <i class="ph ph-arrow-left text-lg"></i> Voltar
             </button>
             
-            <i class="ph ph-seal-check text-6xl text-brand-primary mb-4 mt-4"></i>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">Validação Documental</h2>
-            <p class="text-sm text-slate-600 mb-6">Insira o código de registro único para verificar a autenticidade do documento emitido.</p>
+            <div class="w-20 h-20 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-6 mt-8">
+                <i class="ph-fill ph-seal-check text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Autenticidade de Documento</h2>
+            <p class="text-sm text-slate-500 mb-8 px-4">Verifique a validade de certificados e históricos acadêmicos emitidos pela instituição digitando o código único.</p>
 
-            <form onsubmit="window.handleValidateCertificate(event)" class="flex gap-2 justify-center">
-                <input type="text" id="val-code" required class="input-standard font-mono text-center uppercase" style="max-w: 250px; letter-spacing: 2px;" placeholder="Ex: X9Y8Z7">
-                <button type="submit" class="btn-primary">Verificar</button>
+            <form onsubmit="window.handleValidateCertificate(event)" class="flex flex-col sm:flex-row gap-3 justify-center">
+                <input type="text" id="val-code" required class="input-modern font-mono text-center uppercase tracking-widest sm:w-2/3" placeholder="Ex: A1B2C3D4">
+                <button type="submit" id="btn-validate" class="btn-modern btn-primary sm:w-1/3">Verificar</button>
             </form>
 
-            <div id="val-result" class="mt-6 text-left"></div>
+            <div id="val-result" class="mt-8 text-left"></div>
         </div>
     </div>
 
-    <!-- TELA PRINCIPAL (APP) -->
+    <!-- TELA PRINCIPAL DO APLICATIVO -->
     <div id="app-view" class="min-h-screen flex" style="display: none;">
+        
         <!-- Menu Lateral (Sidebar) -->
-        <aside class="w-64 bg-brand-dark text-slate-300 flex flex-col h-screen sticky top-0 shrink-0">
-            <div class="p-5 border-b border-slate-700/50 flex items-center gap-3 text-white">
-                <i class="ph ph-student text-3xl text-brand-accent"></i>
-                <div>
-                    <h2 class="font-bold text-lg leading-tight uppercase tracking-wide">Portal Acadêmico</h2>
-                    <p class="text-xs text-slate-400">Ambiente de Gestão</p>
-                </div>
-            </div>
-            
-            <div class="p-4 border-b border-slate-700/50 flex items-center gap-3">
-                <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-sm border border-slate-600 bg-slate-800 object-cover">
-                <div class="overflow-hidden">
-                    <p id="user-name" class="text-sm font-semibold text-white truncate"></p>
-                    <p id="user-role" class="text-xs text-brand-accent uppercase font-bold tracking-wider"></p>
-                </div>
+        <aside class="w-64 bg-brand-950 text-slate-300 flex flex-col h-screen sticky top-0 shrink-0 shadow-xl z-20 transition-all duration-300">
+            <!-- Logo Area -->
+            <div class="h-16 flex items-center gap-3 px-6 bg-slate-900/50 text-white border-b border-slate-800">
+                <i class="ph-fill ph-graduation-cap text-2xl text-brand-500"></i>
+                <span class="font-bold tracking-wide">Portal Acadêmico</span>
             </div>
 
-            <nav id="sidebar-nav" class="flex-1 py-4 overflow-y-auto"></nav>
+            <!-- Navegação -->
+            <nav id="sidebar-nav" class="flex-1 py-6 overflow-y-auto px-4 space-y-1"></nav>
 
-            <div class="p-4 border-t border-slate-700/50">
-                <button onclick="window.logout()" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-sm transition">
-                    <i class="ph ph-sign-out text-lg"></i> Encerrar Sessão
+            <!-- Rodapé Menu Lateral -->
+            <div class="p-4 bg-slate-900/30 border-t border-slate-800">
+                <button onclick="window.logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i> Sair do Sistema
                 </button>
             </div>
         </aside>
 
-        <!-- Área de Conteúdo -->
-        <main class="flex-1 flex flex-col min-w-0 bg-slate-50 h-screen overflow-y-auto">
+        <!-- Área Principal -->
+        <main class="flex-1 flex flex-col min-w-0 bg-slate-50 h-screen overflow-y-auto relative">
+            
+            <!-- Banner de E-mail Não Verificado (Dinâmico) -->
+            <div id="email-verification-banner" class="hidden bg-orange-50 border-b border-orange-200 px-8 py-3 flex items-center justify-between z-10">
+                <div class="flex items-center gap-3 text-orange-800 text-sm font-medium">
+                    <i class="ph-fill ph-warning-circle text-lg text-orange-500"></i>
+                    Seu e-mail ainda não foi verificado. Algumas funções podem ser limitadas.
+                </div>
+                <button onclick="window.resendVerification()" class="text-xs bg-orange-100 hover:bg-orange-200 text-orange-800 px-3 py-1.5 rounded-md font-semibold transition-colors">
+                    Reenviar Link
+                </button>
+            </div>
+
             <!-- Header do Conteúdo -->
-            <header class="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
-                <h1 id="page-title" class="text-xl font-bold text-slate-800 uppercase tracking-wide">Dashboard</h1>
-                <div class="text-sm text-slate-500 flex items-center gap-2">
-                    <i class="ph ph-calendar-blank"></i> <span id="current-date"></span>
+            <header class="bg-white px-8 h-16 sticky top-0 z-10 flex justify-between items-center shadow-sm border-b border-slate-100">
+                <h1 id="page-title" class="text-xl font-bold text-slate-800">Carregando...</h1>
+                
+                <!-- User Profile Header -->
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="header-user-name" class="text-sm font-bold text-slate-700 leading-tight"></p>
+                        <p id="header-user-role" class="text-xs text-brand-600 font-medium uppercase tracking-wider"></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500">
+                        <img id="header-user-avatar" src="" alt="Avatar" class="w-full h-full rounded-full object-cover border-2 border-white bg-white">
+                    </div>
                 </div>
             </header>
 
             <!-- Container Dinâmico -->
-            <div id="content-container" class="p-8">
-                <!-- O conteúdo das views será injetado aqui via JS -->
+            <div id="content-container" class="p-8 max-w-7xl mx-auto w-full">
+                <!-- Conteúdo injetado via JS -->
             </div>
         </main>
     </div>
 
-    <!-- ÁREA DE IMPRESSÃO (Oculta normalmente, visível no print) -->
-    <div id="print-area" class="no-print bg-white" style="display: none;"></div>
+    <!-- ÁREA DE IMPRESSÃO -->
+    <div id="print-area" class="no-print" style="display: none;"></div>
 
-    <!-- LÓGICA DO SISTEMA (JAVASCRIPT) -->
+    <!-- ========================================== -->
+    <!-- LOGICA DO SISTEMA (JAVASCRIPT / FIREBASE)  -->
+    <!-- ========================================== -->
     <script type="module">
-        // Importações do Firebase v11 via CDN Oficial
+        // Importações do Firebase v11 (Incluindo funções de E-mail)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, 
-            GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged 
+            GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+            sendEmailVerification, sendPasswordResetEmail
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getDatabase, ref, set, push, get, onValue, remove, update, query, orderByChild, equalTo 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Configurações do Firebase fornecidas pelo utilizador
+        // Configuração mantida conforme fornecida pelo usuário
         const firebaseConfig = {
             apiKey: "AIzaSyAEDi-eQJgTc_IW1s-pd0dcjQTFBpb9dLM",
             authDomain: "portalsimulado-88969.firebaseapp.com",
@@ -241,29 +345,25 @@
             projectId: "portalsimulado-88969",
             storageBucket: "portalsimulado-88969.firebasestorage.app",
             messagingSenderId: "514078102421",
-            appId: "1:514078102421:web:d4125b3691fb6324a95c9c",
-            measurementId: "G-YDRHW1F9VN"
+            appId: "1:514078102421:web:d4125b3691fb6324a95c9c"
         };
 
         const IMGBB_API_KEY = "f7722de0484f8d2059ce8ad1604be00b";
 
-        // Inicialização do Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Estado Global da Aplicação
+        // Estado Global
         let currentUser = null;
         let userData = null;
         let currentView = 'dashboard';
         let isLoginMode = true;
-        let activeListeners = []; // Para limpar ouvintes do RTDB ao trocar de ecrã
-        let userListenerUnsubscribe = null; // Ouvinte em tempo real do perfil de utilizador
-        
-        // Estado temporário para as notas
+        let activeListeners = []; 
+        let userListenerUnsubscribe = null; 
         window.tempGrades = {};
 
-        // === UTILITÁRIOS GLOBAIS ===
+        // === UI UTILS ===
 
         window.showToast = (message, type = 'info') => {
             const container = document.getElementById('toast-container');
@@ -274,13 +374,29 @@
             if(type === 'success') icon = 'ph-check-circle';
             if(type === 'error') icon = 'ph-warning-circle';
             
-            toast.innerHTML = `<i class="ph ${icon} text-xl"></i> <span>${message}</span>`;
+            toast.innerHTML = `<i class="ph-fill ${icon} text-xl"></i> <span>${message}</span>`;
             container.appendChild(toast);
             
             setTimeout(() => {
                 toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
+        };
+
+        const setBtnLoading = (btnId, isLoading, defaultText = '') => {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.original = btn.innerHTML;
+                btn.innerHTML = `<div class="spinner"></div>`;
+            } else {
+                btn.disabled = false;
+                if(btn.dataset.original) btn.innerHTML = btn.dataset.original;
+                else btn.innerHTML = `<span>${defaultText}</span>`;
+            }
         };
 
         function clearListeners() {
@@ -288,103 +404,108 @@
             activeListeners = [];
         }
 
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        // === AUTH & EMAIL LOGIC ===
 
-        // === GERENCIAMENTO DE AUTENTICAÇÃO COM PROTEÇÃO DE CONCORRÊNCIA ===
-
-        onAuthStateChanged(auth, (user) => {
-            // Limpa o ouvinte anterior do utilizador se existir
-            if (userListenerUnsubscribe) {
-                userListenerUnsubscribe();
-                userListenerUnsubscribe = null;
-            }
-
-            if (user) {
-                currentUser = user;
-                const userRef = ref(db, `usuarios/${user.uid}`);
-                
-                // Escuta o nó do utilizador em tempo real. Evita conflitos quando o registo ainda está a ser gravado.
-                userListenerUnsubscribe = onValue(userRef, async (snapshot) => {
-                    if (snapshot.exists()) {
-                        userData = snapshot.val();
-                        initApp();
-                    } else {
-                        // Se o utilizador não existe e veio pelo login do Google, cria o perfil automaticamente
-                        const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-                        if (isGoogle) {
-                            userData = {
-                                nome: user.displayName || 'Usuário do Sistema',
-                                email: user.email,
-                                role: 'aluno',
-                                fotoUrl: user.photoURL || ''
-                            };
-                            await set(userRef, userData);
-                        }
-                        // Se for registo por E-mail/Senha, não faz nada e aguarda que o "handleAuth" faça a gravação,
-                        // o que irá despoletar este listener novamente com os dados corretos.
-                    }
-                });
-            } else {
-                currentUser = null;
-                userData = null;
-                showLoginScreen();
-            }
-        });
-
-        window.toggleAuthMode = (e) => {
-            e.preventDefault();
-            isLoginMode = !isLoginMode;
-            document.getElementById('login-title').innerText = isLoginMode ? 'Acesso Restrito' : 'Solicitação de Cadastro';
-            document.getElementById('auth-submit-btn').innerHTML = `<span>${isLoginMode ? 'Entrar no Sistema' : 'Registrar Usuário'}</span>`;
-            document.getElementById('auth-toggle-text').innerText = isLoginMode ? 'Não possui cadastro?' : 'Já possui acesso?';
-            document.getElementById('auth-toggle-btn').innerText = isLoginMode ? 'Solicitar Acesso' : 'Fazer Login';
-            document.getElementById('register-fields').style.display = isLoginMode ? 'none' : 'block';
+        window.switchAuthTab = (mode) => {
+            isLoginMode = (mode === 'login');
             
-            document.getElementById('auth-name').required = !isLoginMode;
-        };
-
-        const setBtnLoading = (btnId, isLoading, text) => {
-            const btn = document.getElementById(btnId);
-            if (!btn) return;
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerHTML = `<div class="spinner"></div>`;
+            // UI Tab Styling
+            const tLogin = document.getElementById('tab-login');
+            const tReg = document.getElementById('tab-register');
+            
+            if(isLoginMode) {
+                tLogin.className = "flex-1 py-3 text-sm font-semibold border-b-2 text-brand-600 border-brand-600 transition-colors";
+                tReg.className = "flex-1 py-3 text-sm font-semibold border-b-2 text-slate-400 border-transparent hover:text-slate-600 transition-colors";
+                document.getElementById('register-fields').style.display = 'none';
+                document.getElementById('auth-name').required = false;
+                document.getElementById('btn-forgot-password').style.display = 'block';
+                document.getElementById('btn-submit-auth').innerHTML = '<span>Acessar Plataforma</span>';
             } else {
-                btn.disabled = false;
-                btn.innerHTML = `<span>${text}</span>`;
+                tReg.className = "flex-1 py-3 text-sm font-semibold border-b-2 text-brand-600 border-brand-600 transition-colors";
+                tLogin.className = "flex-1 py-3 text-sm font-semibold border-b-2 text-slate-400 border-transparent hover:text-slate-600 transition-colors";
+                document.getElementById('register-fields').style.display = 'block';
+                document.getElementById('auth-name').required = true;
+                document.getElementById('btn-forgot-password').style.display = 'none';
+                document.getElementById('btn-submit-auth').innerHTML = '<span>Criar Conta Gratuita</span>';
             }
         };
 
         window.handleAuth = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
+            const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value;
             
-            setBtnLoading('auth-submit-btn', true, '');
+            setBtnLoading('btn-submit-auth', true);
             try {
                 if (isLoginMode) {
                     await signInWithEmailAndPassword(auth, email, pass);
                     window.showToast('Login realizado com sucesso.', 'success');
                 } else {
-                    const name = document.getElementById('auth-name').value;
+                    const name = document.getElementById('auth-name').value.trim();
                     const role = document.getElementById('auth-role').value;
                     
-                    // Cria o utilizador no Authentication primeiro
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     
-                    // Grava explicitamente o utilizador no Realtime Database com a sua função (Role) correta
+                    // ENVIO DE E-MAIL DE VERIFICAÇÃO AUTOMÁTICO (Funcionalidade solicitada)
+                    try {
+                        await sendEmailVerification(cred.user);
+                        window.showToast('Conta criada! Enviamos um link de confirmação para o seu e-mail.', 'success');
+                    } catch(emailErr) {
+                        console.error("Erro ao enviar email", emailErr);
+                    }
+
+                    // Grava perfil no DB
                     await set(ref(db, `usuarios/${cred.user.uid}`), {
                         nome: name, 
                         email: email, 
                         role: role, 
                         fotoUrl: ''
                     });
-                    
-                    window.showToast('Cadastro realizado. Acesso liberado.', 'success');
                 }
             } catch (error) {
-                window.showToast(error.message, 'error');
-                setBtnLoading('auth-submit-btn', false, isLoginMode ? 'Entrar no Sistema' : 'Registrar Usuário');
+                let msg = 'Ocorreu um erro de autenticação.';
+                if(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = 'E-mail ou senha incorretos.';
+                if(error.code === 'auth/email-already-in-use') msg = 'Este e-mail já possui cadastro.';
+                window.showToast(msg, 'error');
+                setBtnLoading('btn-submit-auth', false);
+            }
+        };
+
+        // RECUPERAÇÃO DE SENHA (Funcionalidade solicitada)
+        window.openForgotPassword = () => {
+            document.getElementById('modal-forgot-password').style.display = 'flex';
+            // Preenche o campo de e-mail do modal com o que já foi digitado, se houver
+            document.getElementById('reset-email').value = document.getElementById('auth-email').value;
+        };
+        
+        window.closeForgotPassword = () => {
+            document.getElementById('modal-forgot-password').style.display = 'none';
+        };
+
+        window.handlePasswordReset = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value.trim();
+            setBtnLoading('btn-send-reset', true);
+            try {
+                await sendPasswordResetEmail(auth, email);
+                window.showToast('Link de recuperação enviado! Verifique sua caixa de entrada e spam.', 'success');
+                window.closeForgotPassword();
+            } catch (error) {
+                window.showToast('Erro ao enviar link. Verifique o e-mail digitado.', 'error');
+            } finally {
+                setBtnLoading('btn-send-reset', false);
+            }
+        };
+
+        window.resendVerification = async () => {
+            if(currentUser) {
+                try {
+                    await sendEmailVerification(currentUser);
+                    window.showToast('E-mail de verificação reenviado.', 'success');
+                } catch(e) {
+                    if(e.code === 'auth/too-many-requests') window.showToast('Aguarde um momento antes de pedir novamente.', 'error');
+                    else window.showToast('Erro ao reenviar.', 'error');
+                }
             }
         };
 
@@ -393,65 +514,96 @@
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                window.showToast('Falha na autenticação via Google.', 'error');
+                window.showToast('Acesso via Google cancelado ou falhou.', 'error');
             }
         };
 
         window.logout = () => {
-            if (userListenerUnsubscribe) {
-                userListenerUnsubscribe();
-                userListenerUnsubscribe = null;
-            }
+            if (userListenerUnsubscribe) { userListenerUnsubscribe(); userListenerUnsubscribe = null; }
             signOut(auth);
         };
 
-        // === NAVEGAÇÃO E RENDERIZAÇÃO ===
+        // Observador Principal de Estado
+        onAuthStateChanged(auth, (user) => {
+            if (userListenerUnsubscribe) { userListenerUnsubscribe(); userListenerUnsubscribe = null; }
 
-        function showLoginScreen() {
-            document.getElementById('login-view').style.display = 'flex';
-            document.getElementById('app-view').style.display = 'none';
-            document.getElementById('validation-view').style.display = 'none';
-            clearListeners();
-        }
+            if (user) {
+                currentUser = user;
+                const userRef = ref(db, `usuarios/${user.uid}`);
+                
+                userListenerUnsubscribe = onValue(userRef, async (snapshot) => {
+                    if (snapshot.exists()) {
+                        userData = snapshot.val();
+                        initApp();
+                    } else {
+                        const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                        if (isGoogle) {
+                            userData = {
+                                nome: user.displayName || 'Usuário Google', email: user.email,
+                                role: 'aluno', fotoUrl: user.photoURL || ''
+                            };
+                            await set(userRef, userData);
+                        }
+                    }
+                });
+            } else {
+                currentUser = null;
+                userData = null;
+                document.getElementById('app-view').style.display = 'none';
+                document.getElementById('validation-view').style.display = 'none';
+                document.getElementById('auth-view').style.display = 'flex';
+                clearListeners();
+                setBtnLoading('btn-submit-auth', false);
+                document.getElementById('auth-form').reset();
+            }
+        });
+
+        // === INICIALIZAÇÃO DA APLICAÇÃO ===
 
         function initApp() {
-            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('auth-view').style.display = 'none';
             document.getElementById('validation-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
             
-            // Popula dados do utilizador
-            document.getElementById('user-name').innerText = userData.nome;
-            document.getElementById('user-role').innerText = userData.role;
-            document.getElementById('user-avatar').src = userData.fotoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.nome) + '&background=1e3a8a&color=fff';
+            // Atualiza Header com Infos do Usuário
+            document.getElementById('header-user-name').innerText = userData.nome;
+            document.getElementById('header-user-role').innerText = userData.role;
+            document.getElementById('header-user-avatar').src = userData.fotoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.nome) + '&background=e0e7ff&color=3730a3';
             
+            // Verifica e exibe banner de email se necessário
+            const banner = document.getElementById('email-verification-banner');
+            if(!currentUser.emailVerified) banner.classList.remove('hidden');
+            else banner.classList.add('hidden');
+
             renderSidebar();
             window.navigateTo('dashboard');
         }
 
-        const menuItemsProf = [
-            { id: 'dashboard', icon: 'ph-chart-bar', label: 'Painel Geral' },
-            { id: 'alunos', icon: 'ph-users', label: 'Gestão de Alunos' },
-            { id: 'turmas', icon: 'ph-books', label: 'Cadastro de Turmas' },
-            { id: 'simulados', icon: 'ph-file-text', label: 'Simulados' },
-            { id: 'notas', icon: 'ph-pencil-simple-line', label: 'Lançamento de Notas' },
-            { id: 'mural', icon: 'ph-megaphone', label: 'Mural de Avisos' },
-            { id: 'certificados', icon: 'ph-certificate', label: 'Emissão de Certificados' }
-        ];
-
-        const menuItemsAluno = [
-            { id: 'dashboard', icon: 'ph-chart-line-up', label: 'Meu Desempenho' },
-            { id: 'boletim', icon: 'ph-exam', label: 'Boletim Escolar' },
-            { id: 'mural', icon: 'ph-megaphone', label: 'Mural de Avisos' },
-            { id: 'certificados', icon: 'ph-certificate', label: 'Meus Certificados' }
-        ];
+        const menus = {
+            professor: [
+                { id: 'dashboard', icon: 'ph-squares-four', label: 'Dashboard' },
+                { id: 'turmas', icon: 'ph-users-three', label: 'Turmas & Alunos' },
+                { id: 'simulados', icon: 'ph-exam', label: 'Avaliações' },
+                { id: 'notas', icon: 'ph-notebook', label: 'Lançar Notas' },
+                { id: 'mural', icon: 'ph-megaphone', label: 'Comunicados' },
+                { id: 'certificados', icon: 'ph-certificate', label: 'Emitir Certificados' }
+            ],
+            aluno: [
+                { id: 'dashboard', icon: 'ph-trend-up', label: 'Meu Desempenho' },
+                { id: 'boletim', icon: 'ph-exam', label: 'Histórico Escolar' },
+                { id: 'mural', icon: 'ph-megaphone', label: 'Quadro de Avisos' },
+                { id: 'certificados', icon: 'ph-certificate', label: 'Meus Certificados' }
+            ]
+        };
 
         function renderSidebar() {
             const nav = document.getElementById('sidebar-nav');
-            const items = userData.role === 'professor' ? menuItemsProf : menuItemsAluno;
+            const items = menus[userData.role];
             
             nav.innerHTML = items.map(item => `
-                <button onclick="window.navigateTo('${item.id}')" id="menu-${item.id}" class="w-full flex items-center gap-3 px-6 py-3 text-sm border-l-4 border-transparent hover:bg-slate-800 text-slate-300 hover:text-white transition">
-                    <i class="ph ${item.icon} text-lg"></i> ${item.label}
+                <button onclick="window.navigateTo('${item.id}')" id="menu-${item.id}" 
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="ph ${item.icon} text-xl"></i> ${item.label}
                 </button>
             `).join('');
         }
@@ -460,142 +612,223 @@
             clearListeners();
             currentView = viewId;
             
-            // Atualiza sidebar ativa
+            // Sidebar Active State
             document.querySelectorAll('#sidebar-nav button').forEach(btn => {
-                btn.classList.remove('bg-slate-800', 'border-brand-accent', 'text-white');
-                btn.classList.add('border-transparent', 'text-slate-300');
+                btn.classList.remove('bg-brand-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:bg-slate-800');
+                btn.querySelector('i').classList.remove('ph-fill');
             });
             const activeBtn = document.getElementById(`menu-${viewId}`);
             if(activeBtn) {
-                activeBtn.classList.add('bg-slate-800', 'border-brand-accent', 'text-white');
-                activeBtn.classList.remove('border-transparent', 'text-slate-300');
+                activeBtn.classList.add('bg-brand-600', 'text-white');
+                activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+                activeBtn.querySelector('i').classList.add('ph-fill');
             }
 
-            // Atualiza Título
-            const items = userData.role === 'professor' ? menuItemsProf : menuItemsAluno;
-            const titleObj = items.find(i => i.id === viewId);
-            document.getElementById('page-title').innerText = titleObj ? titleObj.label : 'Página';
+            // Title Update
+            const item = menus[userData.role].find(i => i.id === viewId);
+            document.getElementById('page-title').innerText = item ? item.label : '';
 
-            // Renderiza Conteúdo
+            // Render Layout Container
             const container = document.getElementById('content-container');
-            container.innerHTML = '<div class="text-center py-10"><div class="spinner border-brand-primary border-top-transparent mx-auto"></div></div>';
+            container.innerHTML = '<div class="flex justify-center py-20"><div class="spinner text-brand-600 w-8 h-8"></div></div>';
 
+            // Route handler
             if (userData.role === 'professor') {
-                switch(viewId) {
-                    case 'dashboard': renderProfDashboard(container); break;
-                    case 'alunos': renderManageStudents(container); break;
-                    case 'turmas': renderManageGenerics(container, 'turmas'); break;
-                    case 'simulados': renderManageGenerics(container, 'simulados'); break;
-                    case 'notas': renderManageGrades(container); break;
-                    case 'mural': renderMural(container, true); break;
-                    case 'certificados': renderCertificatesProf(container); break;
-                }
+                if(viewId === 'dashboard') renderProfDashboard(container);
+                else if(viewId === 'turmas') renderProfTurmasAlunos(container);
+                else if(viewId === 'simulados') renderManageGenerics(container, 'simulados', 'Nova Avaliação', 'Data de Aplicação');
+                else if(viewId === 'notas') renderManageGrades(container);
+                else if(viewId === 'mural') renderMural(container, true);
+                else if(viewId === 'certificados') renderCertificatesProf(container);
             } else {
-                switch(viewId) {
-                    case 'dashboard': renderStudentDashboard(container); break;
-                    case 'boletim': renderStudentGrades(container); break;
-                    case 'mural': renderMural(container, false); break;
-                    case 'certificados': renderCertificatesStudent(container); break;
-                }
+                if(viewId === 'dashboard') renderStudentDashboard(container);
+                else if(viewId === 'boletim') renderStudentGrades(container);
+                else if(viewId === 'mural') renderMural(container, false);
+                else if(viewId === 'certificados') renderCertificatesStudent(container);
             }
         };
 
-        // === IMPLEMENTAÇÃO DAS VIEWS (PROFESSOR) ===
+        // === VIEWS: PROFESSOR ===
 
         async function renderProfDashboard(container) {
-            const [alSnap, trSnap, smSnap, ntSnap] = await Promise.all([
+            const [alSnap, trSnap, smSnap] = await Promise.all([
                 get(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno'))),
                 get(ref(db, 'turmas')),
-                get(ref(db, 'simulados')),
-                get(ref(db, 'notas'))
+                get(ref(db, 'simulados'))
             ]);
 
             const qtdAlunos = alSnap.exists() ? Object.keys(alSnap.val()).length : 0;
             const qtdTurmas = trSnap.exists() ? Object.keys(trSnap.val()).length : 0;
             const qtdSimul = smSnap.exists() ? Object.keys(smSnap.val()).length : 0;
-            
-            let mediaGeral = 0;
-            let count = 0;
-            if (ntSnap.exists()) {
-                Object.values(ntSnap.val()).forEach(aluno => {
-                    Object.values(aluno).forEach(nota => {
-                        mediaGeral += Number(nota.total || 0);
-                        count++;
-                    });
-                });
-            }
-            const mediaFinal = count > 0 ? (mediaGeral / count).toFixed(1) : 0;
 
             container.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="card border-l-4 border-l-blue-600 flex items-center gap-4">
-                        <div class="p-3 bg-blue-100 text-blue-700 rounded-sm"><i class="ph ph-users text-2xl"></i></div>
-                        <div><p class="text-xs font-semibold text-slate-500 uppercase">Total de Alunos</p><p class="text-2xl font-bold text-slate-800">${qtdAlunos}</p></div>
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Olá, Professor(a) ${userData.nome.split(' ')[0]} 👋</h2>
+                    <p class="text-slate-500">Aqui está o resumo da sua instituição hoje.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Card 1 -->
+                    <div class="card-modern flex items-center p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
+                        <div class="flex-1">
+                            <p class="text-blue-100 font-medium text-sm">Alunos Matriculados</p>
+                            <h3 class="text-4xl font-bold mt-1">${qtdAlunos}</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-users text-2xl"></i></div>
                     </div>
-                    <div class="card border-l-4 border-l-green-600 flex items-center gap-4">
-                        <div class="p-3 bg-green-100 text-green-700 rounded-sm"><i class="ph ph-books text-2xl"></i></div>
-                        <div><p class="text-xs font-semibold text-slate-500 uppercase">Turmas Ativas</p><p class="text-2xl font-bold text-slate-800">${qtdTurmas}</p></div>
+                    <!-- Card 2 -->
+                    <div class="card-modern flex items-center p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none">
+                        <div class="flex-1">
+                            <p class="text-emerald-100 font-medium text-sm">Turmas Ativas</p>
+                            <h3 class="text-4xl font-bold mt-1">${qtdTurmas}</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-chalkboard-teacher text-2xl"></i></div>
                     </div>
-                    <div class="card border-l-4 border-l-purple-600 flex items-center gap-4">
-                        <div class="p-3 bg-purple-100 text-purple-700 rounded-sm"><i class="ph ph-file-text text-2xl"></i></div>
-                        <div><p class="text-xs font-semibold text-slate-500 uppercase">Simulados</p><p class="text-2xl font-bold text-slate-800">${qtdSimul}</p></div>
-                    </div>
-                    <div class="card border-l-4 border-l-orange-600 flex items-center gap-4">
-                        <div class="p-3 bg-orange-100 text-orange-700 rounded-sm"><i class="ph ph-chart-bar text-2xl"></i></div>
-                        <div><p class="text-xs font-semibold text-slate-500 uppercase">Média Institucional</p><p class="text-2xl font-bold text-slate-800">${mediaFinal}</p></div>
+                    <!-- Card 3 -->
+                    <div class="card-modern flex items-center p-6 bg-gradient-to-br from-violet-500 to-violet-600 text-white border-none">
+                        <div class="flex-1">
+                            <p class="text-violet-100 font-medium text-sm">Avaliações/Simulados</p>
+                            <h3 class="text-4xl font-bold mt-1">${qtdSimul}</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-exam text-2xl"></i></div>
                     </div>
                 </div>
-                <div class="card">
-                    <h3 class="card-header"><i class="ph ph-info text-brand-primary"></i> Painel de Controle Institucional</h3>
-                    <p class="text-sm text-slate-600">Bem-vindo(a) ao sistema de gestão. Utilize o menu lateral para gerenciar as rotinas acadêmicas, lançar resultados nos moldes do ENEM e emitir documentação certificada aos estudantes.</p>
+
+                <div class="card-modern bg-white">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-brand-50 text-brand-600 rounded-lg"><i class="ph ph-lightning text-xl"></i></div>
+                        <h3 class="text-lg font-bold text-slate-800">Ações Rápidas</h3>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="window.navigateTo('notas')" class="p-4 border border-slate-100 rounded-xl hover:border-brand-500 hover:shadow-md transition-all text-left group bg-slate-50 hover:bg-white">
+                            <i class="ph ph-notebook text-2xl text-slate-400 group-hover:text-brand-500 mb-2 block"></i>
+                            <span class="font-semibold text-slate-700 block">Lançar Notas</span>
+                        </button>
+                        <button onclick="window.navigateTo('certificados')" class="p-4 border border-slate-100 rounded-xl hover:border-brand-500 hover:shadow-md transition-all text-left group bg-slate-50 hover:bg-white">
+                            <i class="ph ph-certificate text-2xl text-slate-400 group-hover:text-brand-500 mb-2 block"></i>
+                            <span class="font-semibold text-slate-700 block">Emitir Certificado</span>
+                        </button>
+                        <button onclick="window.navigateTo('mural')" class="p-4 border border-slate-100 rounded-xl hover:border-brand-500 hover:shadow-md transition-all text-left group bg-slate-50 hover:bg-white">
+                            <i class="ph ph-megaphone text-2xl text-slate-400 group-hover:text-brand-500 mb-2 block"></i>
+                            <span class="font-semibold text-slate-700 block">Novo Aviso</span>
+                        </button>
+                    </div>
                 </div>
             `;
         }
 
-        function renderManageGenerics(container, type) {
-            const isTurma = type === 'turmas';
-            const title = isTurma ? 'Turma' : 'Simulado';
-            const extraLabel = isTurma ? 'Ano Letivo' : 'Data de Aplicação';
-
+        // View Combinada: Turmas e Alunos para ficar menos confuso
+        function renderProfTurmasAlunos(container) {
             container.innerHTML = `
-                <div class="card">
-                    <h3 class="card-header"><i class="ph ph-plus-circle text-brand-primary"></i> Registrar Novo(a) ${title}</h3>
-                    <form onsubmit="window.handleAddGeneric(event, '${type}')" class="flex gap-4 items-end">
-                        <div class="flex-1">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase">Nome da(o) ${title}</label>
-                            <input type="text" id="gen-nome" required class="input-standard">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Gestão de Turmas -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="card-modern">
+                            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-plus-circle text-brand-500"></i> Criar Turma</h3>
+                            <form onsubmit="window.handleAddGeneric(event, 'turmas')" class="space-y-3">
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Nome da Turma</label><input type="text" id="gen-nome" required class="input-modern bg-white"></div>
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Ano Letivo</label><input type="text" id="gen-extra" required class="input-modern bg-white" placeholder="Ex: 2026"></div>
+                                <button type="submit" class="w-full btn-modern btn-primary">Adicionar Turma</button>
+                            </form>
                         </div>
-                        <div class="w-48">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase">${extraLabel}</label>
-                            <input type="${isTurma ? 'text' : 'date'}" id="gen-extra" required class="input-standard">
+                        <div class="card-modern p-0 overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-slate-50"><h3 class="font-bold text-slate-800 text-sm">Turmas Ativas</h3></div>
+                            <div id="gen-table-container" class="max-h-64 overflow-y-auto">Carregando...</div>
                         </div>
-                        <button type="submit" class="btn-primary h-[38px]">Salvar Registro</button>
-                    </form>
+                    </div>
+
+                    <!-- Enturmação de Alunos -->
+                    <div class="lg:col-span-2 card-modern">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph-fill ph-users text-brand-500"></i> Enturmação de Alunos</h3>
+                            <div class="relative">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                                <input type="text" id="search-student" onkeyup="window.filterStudents()" placeholder="Buscar aluno..." class="input-modern pl-9 w-64 bg-slate-50">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-100">
+                            <div id="students-table-container">Carregando...</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
-                    <h3 class="card-header"><i class="ph ph-list text-brand-primary"></i> Registros Ativos</h3>
-                    <div id="gen-table-container">Carregando...</div>
+            `;
+
+            // Setup Listeners for Turmas
+            const unsubTurmas = onValue(ref(db, 'turmas'), snap => {
+                let html = '<ul class="divide-y divide-slate-100">';
+                if (snap.exists()) {
+                    window.localTurmas = snap.val();
+                    Object.keys(window.localTurmas).forEach(key => {
+                        const t = window.localTurmas[key];
+                        html += `
+                        <li class="p-4 flex justify-between items-center hover:bg-slate-50">
+                            <div><p class="font-bold text-slate-800 text-sm">${t.nome}</p><p class="text-xs text-slate-500">${t.ano}</p></div>
+                            <button onclick="window.handleDelete('turmas', '${key}')" class="text-red-400 hover:text-red-600 p-2"><i class="ph ph-trash"></i></button>
+                        </li>`;
+                    });
+                } else {
+                    window.localTurmas = {};
+                    html += '<li class="p-4 text-sm text-slate-500 text-center">Nenhuma turma criada.</li>';
+                }
+                html += '</ul>';
+                document.getElementById('gen-table-container').innerHTML = html;
+                if(window.localAlunos) window.renderStudentTable(window.localAlunos, window.localTurmas);
+            });
+            activeListeners.push(unsubTurmas);
+
+            // Setup Listeners for Alunos
+            const unsubAlunos = onValue(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno')), snap => {
+                if (!snap.exists()) {
+                    document.getElementById('students-table-container').innerHTML = '<div class="p-8 text-center text-slate-500">Nenhum aluno cadastrado no sistema.</div>';
+                    return;
+                }
+                window.localAlunos = snap.val();
+                window.renderStudentTable(window.localAlunos, window.localTurmas || {});
+            });
+            activeListeners.push(unsubAlunos);
+        }
+
+        // Generic function for Simulados (can be expanded)
+        function renderManageGenerics(container, type, titleInput, extraLabel) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-modern md:col-span-1 h-fit">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-plus-circle text-brand-500"></i> ${titleInput}</h3>
+                        <form onsubmit="window.handleAddGeneric(event, '${type}')" class="space-y-4">
+                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">Descrição / Nome</label><input type="text" id="gen-nome" required class="input-modern bg-white"></div>
+                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">${extraLabel}</label><input type="date" id="gen-extra" required class="input-modern bg-white"></div>
+                            <button type="submit" class="w-full btn-modern btn-primary">Salvar Registro</button>
+                        </form>
+                    </div>
+                    <div class="card-modern md:col-span-2 p-0 overflow-hidden border border-slate-100">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                            <i class="ph-fill ph-list-dashes text-brand-500 text-lg"></i>
+                            <h3 class="font-bold text-slate-800">Registros Ativos</h3>
+                        </div>
+                        <div id="gen-table-wrapper" class="overflow-x-auto">Carregando...</div>
+                    </div>
                 </div>
             `;
 
             const unsub = onValue(ref(db, type), snap => {
-                let html = `<table class="table-standard"><thead><tr><th>Nome</th><th>${extraLabel}</th><th style="width:100px; text-align:center;">Ações</th></tr></thead><tbody>`;
+                let html = `<table class="table-clean"><thead><tr><th>Descrição</th><th>${extraLabel}</th><th class="text-right">Ações</th></tr></thead><tbody>`;
                 if (snap.exists()) {
                     const data = snap.val();
                     Object.keys(data).forEach(key => {
                         html += `<tr>
-                            <td class="font-medium">${data[key].nome}</td>
-                            <td>${data[key].ano || data[key].data}</td>
-                            <td class="text-center">
-                                <button onclick="window.handleDelete('${type}', '${key}')" class="btn-danger"><i class="ph ph-trash"></i></button>
+                            <td class="font-semibold text-slate-700">${data[key].nome}</td>
+                            <td class="text-slate-500">${data[key].data || data[key].ano}</td>
+                            <td class="text-right">
+                                <button onclick="window.handleDelete('${type}', '${key}')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-lg transition-colors"><i class="ph ph-trash text-lg"></i></button>
                             </td>
                         </tr>`;
                     });
                 } else {
-                    html += `<tr><td colspan="3" class="text-center text-slate-500 py-4">Nenhum registro encontrado no banco de dados.</td></tr>`;
+                    html += `<tr><td colspan="3" class="text-center text-slate-500 py-8">Nenhum registro encontrado.</td></tr>`;
                 }
                 html += `</tbody></table>`;
-                document.getElementById('gen-table-container').innerHTML = html;
+                document.getElementById('gen-table-wrapper').innerHTML = html;
             });
             activeListeners.push(unsub);
         }
@@ -608,97 +841,97 @@
             if (type === 'turmas') dataObj.ano = extra; else dataObj.data = extra;
             
             await push(ref(db, type), dataObj);
-            document.getElementById('gen-nome').value = '';
-            document.getElementById('gen-extra').value = '';
-            window.showToast('Registro salvo com sucesso.', 'success');
+            e.target.reset();
+            window.showToast('Registro adicionado.', 'success');
         };
 
         window.handleDelete = async (path, id) => {
-            if (confirm("Confirma a exclusão deste registro permanentemente?")) {
+            if (confirm("Deseja realmente excluir este registro?")) {
                 await remove(ref(db, `${path}/${id}`));
-                window.showToast('Registro apagado.', 'info');
+                window.showToast('Excluído com sucesso.', 'info');
             }
         };
-
-        function renderManageStudents(container) {
-            container.innerHTML = `
-                <div class="card">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="card-header mb-0 border-none"><i class="ph ph-users-three text-brand-primary"></i> Gestão do Corpo Discente</h3>
-                        <input type="text" id="search-student" onkeyup="window.filterStudents()" placeholder="Buscar por nome ou e-mail..." class="input-standard w-64">
-                    </div>
-                    <div id="students-table-container">Carregando dados...</div>
-                </div>
-            `;
-
-            let turmasData = {};
-            get(ref(db, 'turmas')).then(tSnap => { if (tSnap.exists()) turmasData = tSnap.val(); });
-
-            const unsub = onValue(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno')), snap => {
-                if (!snap.exists()) {
-                    document.getElementById('students-table-container').innerHTML = '<p class="text-slate-500 p-4">Nenhum aluno matriculado.</p>';
-                    return;
-                }
-                const alunos = snap.val();
-                window.localAlunos = alunos; // cache para o filtro
-                window.localTurmas = turmasData;
-                window.renderStudentTable(alunos, turmasData);
-            });
-            activeListeners.push(unsub);
-        }
 
         window.filterStudents = () => {
             const termo = document.getElementById('search-student').value.toLowerCase();
             const filtrados = {};
-            Object.keys(window.localAlunos).forEach(key => {
-                const a = window.localAlunos[key];
-                if (a.nome.toLowerCase().includes(termo) || a.email.toLowerCase().includes(termo)) {
-                    filtrados[key] = a;
-                }
-            });
-            window.renderStudentTable(filtrados, window.localTurmas);
+            if(window.localAlunos) {
+                Object.keys(window.localAlunos).forEach(key => {
+                    const a = window.localAlunos[key];
+                    if (a.nome.toLowerCase().includes(termo) || a.email.toLowerCase().includes(termo)) {
+                        filtrados[key] = a;
+                    }
+                });
+                window.renderStudentTable(filtrados, window.localTurmas || {});
+            }
         };
 
         window.renderStudentTable = (alunos, turmas) => {
-            let turmasOpts = `<option value="">-- Sem vínculo --</option>`;
+            let turmasOpts = `<option value="">Não Enturmado</option>`;
             Object.keys(turmas).forEach(tk => { turmasOpts += `<option value="${tk}">${turmas[tk].nome}</option>`; });
 
-            let html = `<table class="table-standard"><thead><tr><th>Aluno</th><th>Contatos institucionais</th><th>Enturmação</th></tr></thead><tbody>`;
+            let html = `<table class="table-clean"><thead><tr><th>Aluno(a)</th><th>Turma Vinculada</th></tr></thead><tbody>`;
             Object.keys(alunos).forEach(key => {
                 const a = alunos[key];
                 let opts = turmasOpts.replace(`value="${a.turmaId || ''}"`, `value="${a.turmaId || ''}" selected`);
-                html += `<tr class="student-row">
-                    <td><div class="flex items-center gap-2 font-medium"><img src="${a.fotoUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(a.nome)}" class="w-6 h-6 rounded-sm"> ${a.nome}</div></td>
-                    <td class="text-slate-500">${a.email}</td>
-                    <td style="width:250px;">
-                        <select onchange="window.assignClass('${key}', this.value)" class="input-standard py-1 h-8 text-xs">${opts}</select>
+                
+                const verifiedIcon = a.emailVerified === false ? `<i class="ph-fill ph-warning-circle text-orange-500 ml-1" title="E-mail não verificado"></i>` : '';
+
+                html += `<tr>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <img src="${a.fotoUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(a.nome)+'&bg=f1f5f9&color=64748b'}" class="w-8 h-8 rounded-full border border-slate-200">
+                            <div>
+                                <p class="font-bold text-slate-700 text-sm flex items-center">${a.nome} ${verifiedIcon}</p>
+                                <p class="text-xs text-slate-500">${a.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width:200px;">
+                        <select onchange="window.assignClass('${key}', this.value)" class="input-modern py-1.5 px-3 bg-white text-sm cursor-pointer shadow-sm">${opts}</select>
                     </td>
                 </tr>`;
             });
             html += `</tbody></table>`;
-            document.getElementById('students-table-container').innerHTML = html;
+            const container = document.getElementById('students-table-container');
+            if(container) container.innerHTML = html;
         };
 
         window.assignClass = async (studentId, turmaId) => {
             await update(ref(db, `usuarios/${studentId}`), { turmaId });
-            window.showToast('Enturmação actualizada com sucesso.', 'success');
+            window.showToast('Turma atualizada.', 'success');
         };
 
+        // NOTAS
         function renderManageGrades(container) {
             container.innerHTML = `
-                <div class="card">
-                    <h3 class="card-header"><i class="ph ph-pencil-simple-line text-brand-primary"></i> Mapa de Notas - Padrão ENEM</h3>
-                    <div class="mb-6 max-w-md">
-                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase">Selecione a Avaliação</label>
-                        <select id="grade-sim-select" onchange="window.loadGradesForSim(this.value)" class="input-standard">
-                            <option value="">-- Selecione --</option>
-                        </select>
-                    </div>
-                    <div id="grades-editor-container" style="display:none;">
-                        <div id="grades-table"></div>
-                        <div class="mt-6 border-t pt-4 text-right">
-                            <button onclick="window.saveAllGrades()" class="btn-primary bg-green-700 hover:bg-green-800 border-green-800"><i class="ph ph-floppy-disk"></i> Gravar Resultados Oficiais</button>
+                <div class="card-modern">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 border-b border-slate-100 pb-6 mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph-fill ph-notebook text-brand-500"></i> Diário de Notas (ENEM)</h3>
+                            <p class="text-sm text-slate-500 mt-1">Selecione uma avaliação para lançar ou editar os resultados.</p>
                         </div>
+                        <div class="w-full sm:w-72">
+                            <select id="grade-sim-select" onchange="window.loadGradesForSim(this.value)" class="input-modern font-semibold text-brand-900 bg-brand-50 border-brand-100 focus:border-brand-500">
+                                <option value="">-- Escolher Avaliação --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="grades-editor-container" class="hidden">
+                        <div class="overflow-x-auto rounded-xl border border-slate-100">
+                            <div id="grades-table"></div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="window.saveAllGrades()" class="btn-modern bg-emerald-600 text-white hover:bg-emerald-700 shadow-md">
+                                <i class="ph-bold ph-check"></i> Salvar Todos os Resultados
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="grades-placeholder" class="text-center py-16 text-slate-400">
+                        <i class="ph ph-hand-pointing text-4xl mb-2"></i>
+                        <p>Selecione uma avaliação acima para iniciar o lançamento.</p>
                     </div>
                 </div>
             `;
@@ -715,7 +948,19 @@
         }
 
         window.loadGradesForSim = async (simId) => {
-            if (!simId) { document.getElementById('grades-editor-container').style.display = 'none'; return; }
+            const editor = document.getElementById('grades-editor-container');
+            const placeholder = document.getElementById('grades-placeholder');
+            
+            if (!simId) { 
+                editor.classList.add('hidden'); 
+                placeholder.classList.remove('hidden');
+                return; 
+            }
+            
+            editor.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            document.getElementById('grades-table').innerHTML = '<div class="p-8 text-center"><div class="spinner text-brand-500 mx-auto"></div></div>';
+
             window.currentSimIdForGrades = simId;
             window.tempGrades = {};
 
@@ -727,14 +972,14 @@
             const alunos = alSnap.exists() ? alSnap.val() : {};
             const allGrades = ntSnap.exists() ? ntSnap.val() : {};
 
-            let html = `<table class="table-standard text-center"><thead><tr>
-                <th class="text-left">Identificação do Aluno</th>
-                <th title="Linguagens e Códigos" style="width:100px;">L.C.</th>
-                <th title="Matemática e Suas Tecnologias" style="width:100px;">M.T.</th>
-                <th title="Ciências Humanas" style="width:100px;">C.H.</th>
-                <th title="Ciências da Natureza" style="width:100px;">C.N.</th>
-                <th title="Redação" style="width:100px;">RED</th>
-                <th class="bg-slate-200" style="width:100px;">TOTAL</th>
+            let html = `<table class="table-clean text-center whitespace-nowrap"><thead><tr>
+                <th class="text-left w-64">Nome do Aluno</th>
+                <th title="Linguagens">L.C.</th>
+                <th title="Matemática">M.T.</th>
+                <th title="C. Humanas">C.H.</th>
+                <th title="C. Natureza">C.N.</th>
+                <th title="Redação">RED</th>
+                <th class="bg-brand-50 text-brand-800 rounded-tr-xl">PONTUAÇÃO FINAL</th>
             </tr></thead><tbody>`;
 
             Object.keys(alunos).forEach(alunoId => {
@@ -742,20 +987,24 @@
                 const g = (allGrades[alunoId] && allGrades[alunoId][simId]) ? allGrades[alunoId][simId] : {lc:0, mt:0, ch:0, cn:0, red:0, total:0};
                 window.tempGrades[alunoId] = { ...g };
 
-                html += `<tr>
-                    <td class="text-left font-medium text-slate-700">${a.nome}</td>
-                    <td><input type="number" min="0" max="1000" class="input-standard text-center py-1" value="${g.lc||''}" onchange="window.updateTempGrade('${alunoId}', 'lc', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="input-standard text-center py-1" value="${g.mt||''}" onchange="window.updateTempGrade('${alunoId}', 'mt', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="input-standard text-center py-1" value="${g.ch||''}" onchange="window.updateTempGrade('${alunoId}', 'ch', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="input-standard text-center py-1" value="${g.cn||''}" onchange="window.updateTempGrade('${alunoId}', 'cn', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="input-standard text-center py-1" value="${g.red||''}" onchange="window.updateTempGrade('${alunoId}', 'red', this.value)"></td>
-                    <td class="font-bold text-brand-primary bg-slate-50" id="total-${alunoId}">${g.total||0}</td>
+                const inpClass = "input-modern py-1.5 px-2 text-center text-sm font-semibold text-slate-700 w-20 mx-auto bg-slate-50";
+
+                html += `<tr class="hover:bg-slate-50 transition-colors">
+                    <td class="text-left font-medium text-slate-700 flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-slate-200 flex-shrink-0 overflow-hidden"><img src="${a.fotoUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(a.nome)+'&bg=f1f5f9'}" class="w-full h-full object-cover"></div>
+                        <span class="truncate w-48">${a.nome}</span>
+                    </td>
+                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.lc||''}" onchange="window.updateTempGrade('${alunoId}', 'lc', this.value)"></td>
+                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.mt||''}" onchange="window.updateTempGrade('${alunoId}', 'mt', this.value)"></td>
+                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.ch||''}" onchange="window.updateTempGrade('${alunoId}', 'ch', this.value)"></td>
+                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.cn||''}" onchange="window.updateTempGrade('${alunoId}', 'cn', this.value)"></td>
+                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.red||''}" onchange="window.updateTempGrade('${alunoId}', 'red', this.value)"></td>
+                    <td class="font-bold text-lg text-brand-600 bg-brand-50/30" id="total-${alunoId}">${g.total||0}</td>
                 </tr>`;
             });
             html += `</tbody></table>`;
             
             document.getElementById('grades-table').innerHTML = html;
-            document.getElementById('grades-editor-container').style.display = 'block';
         };
 
         window.updateTempGrade = (alunoId, field, val) => {
@@ -765,6 +1014,11 @@
             const total = (g.lc||0) + (g.mt||0) + (g.ch||0) + (g.cn||0) + (g.red||0);
             window.tempGrades[alunoId].total = total;
             document.getElementById(`total-${alunoId}`).innerText = total;
+            
+            // Highlight total briefly
+            const tEl = document.getElementById(`total-${alunoId}`);
+            tEl.classList.add('text-emerald-500', 'scale-110');
+            setTimeout(() => tEl.classList.remove('text-emerald-500', 'scale-110'), 300);
         };
 
         window.saveAllGrades = async () => {
@@ -776,39 +1030,48 @@
             });
             try {
                 await update(ref(db), updates);
-                window.showToast("Diário de notas salvo e bloqueado com sucesso.", "success");
-            } catch (e) { window.showToast("Erro de gravação.", "error"); }
+                window.showToast("Notas salvas com sucesso!", "success");
+            } catch (e) { window.showToast("Erro ao salvar notas.", "error"); }
         };
 
+        // MURAL COMUNICADOS
         function renderMural(container, isProf) {
-            let html = `<div class="flex gap-6 items-start flex-col lg:flex-row">`;
+            let html = `<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">`;
             
             if (isProf) {
                 html += `
-                <div class="card lg:w-1/3 w-full sticky top-24">
-                    <h3 class="card-header"><i class="ph ph-megaphone text-brand-primary"></i> Emissão de Comunicado</h3>
-                    <form onsubmit="window.handlePostMural(event)" class="space-y-4">
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">TÍTULO</label><input type="text" id="mu-title" required class="input-standard"></div>
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">CORPO DO TEXTO</label><textarea id="mu-content" required rows="4" class="input-standard resize-none"></textarea></div>
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">ANEXAR IMAGEM (Opcional)</label><input type="file" id="mu-img" accept="image/*" class="w-full text-xs border border-slate-300 p-1 rounded-sm bg-white"></div>
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">URL EXTERNA / LINK</label><input type="url" id="mu-link" class="input-standard" placeholder="https://..."></div>
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">VÍDEO YOUTUBE (URL)</label><input type="url" id="mu-yt" class="input-standard" placeholder="https://youtube.com/watch?v=..."></div>
-                        <div class="flex gap-4 border-t border-slate-200 pt-3 mt-3">
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="mu-pin"> <i class="ph ph-push-pin text-brand-primary"></i> Fixar no Topo</label>
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="mu-urgent"> <i class="ph ph-warning text-red-600"></i> Alta Prioridade</label>
-                        </div>
-                        <button type="submit" id="mu-btn" class="w-full btn-primary justify-center mt-2">Publicar Comunicado</button>
-                    </form>
-                </div>
-                `;
-            }
+                <div class="lg:col-span-1">
+                    <div class="card-modern sticky top-24">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-paper-plane-tilt text-brand-500"></i> Novo Comunicado</h3>
+                        <form onsubmit="window.handlePostMural(event)" class="space-y-4">
+                            <div><input type="text" id="mu-title" required class="input-modern bg-white font-medium" placeholder="Título do aviso..."></div>
+                            <div><textarea id="mu-content" required rows="4" class="input-modern bg-white resize-none" placeholder="Escreva a mensagem aqui..."></textarea></div>
+                            
+                            <div class="space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Anexos Opcionais</p>
+                                <div><label class="block text-xs text-slate-500 mb-1">Imagem</label><input type="file" id="mu-img" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Link (URL)</label><input type="url" id="mu-link" class="input-modern py-1.5 text-xs bg-white" placeholder="https://..."></div>
+                            </div>
 
-            html += `<div class="flex-1 w-full flex flex-col gap-4" id="mural-feed-container">Carregando circulares...</div></div>`;
+                            <div class="flex gap-4 pt-2">
+                                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-slate-800"><input type="checkbox" id="mu-pin" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"> <i class="ph-fill ph-push-pin text-brand-500"></i> Fixar</label>
+                                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-red-600"><input type="checkbox" id="mu-urgent" class="rounded border-slate-300 text-red-600 focus:ring-red-500"> <i class="ph-fill ph-warning-circle text-red-500"></i> Urgente</label>
+                            </div>
+                            <button type="submit" id="mu-btn" class="w-full btn-modern btn-primary mt-2">Publicar</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 flex flex-col gap-6" id="mural-feed-container"></div>
+                `;
+            } else {
+                html += `<div class="lg:col-span-3 flex flex-col gap-6" id="mural-feed-container"></div>`;
+            }
+            html += `</div>`;
             container.innerHTML = html;
 
             const unsub = onValue(ref(db, 'mural'), snap => {
                 const feed = document.getElementById('mural-feed-container');
-                if(!snap.exists()) { feed.innerHTML = '<div class="card text-center text-slate-500">Nenhum comunicado ativo.</div>'; return; }
+                if(!snap.exists()) { feed.innerHTML = '<div class="text-center text-slate-400 py-12"><i class="ph ph-chat-circle-slash text-4xl mb-2"></i><p>Nenhum comunicado no momento.</p></div>'; return; }
                 
                 let posts = [];
                 snap.forEach(child => { posts.push({ id: child.key, ...child.val() }); });
@@ -821,30 +1084,34 @@
 
                 let feedHtml = '';
                 posts.forEach(p => {
-                    let borders = 'border border-slate-200';
-                    if (p.urgent) borders = 'border-l-4 border-l-red-600 border-y border-r border-slate-200';
+                    let cardClasses = 'card-modern relative transition-all hover:shadow-lg ';
+                    if (p.urgent) cardClasses += 'border-l-4 border-l-red-500';
+                    else if (p.pinned) cardClasses += 'border-l-4 border-l-brand-500';
+                    else cardClasses += 'border-l-4 border-l-transparent';
                     
-                    feedHtml += `<div class="bg-white ${borders} rounded-sm shadow-sm p-6 relative">`;
-                    if (isProf) feedHtml += `<button onclick="window.handleDelete('mural', '${p.id}')" class="absolute top-4 right-4 text-red-500 hover:bg-red-50 p-1 rounded"><i class="ph ph-trash"></i></button>`;
+                    feedHtml += `<div class="${cardClasses}">`;
+                    if (isProf) feedHtml += `<button onclick="window.handleDelete('mural', '${p.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-1 rounded-md hover:bg-red-50 transition-colors"><i class="ph ph-trash text-lg"></i></button>`;
                     
                     feedHtml += `
-                        <h4 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-1">
-                            ${p.pinned ? '<i class="ph ph-push-pin text-brand-primary"></i>' : ''}
-                            ${p.urgent ? '<i class="ph ph-warning text-red-600"></i>' : ''}
-                            ${p.title}
-                        </h4>
-                        <div class="text-xs text-slate-500 mb-4 border-b pb-2 uppercase tracking-wide">Data: ${new Date(p.date).toLocaleString('pt-BR')} • Emissor: ${p.author}</div>
-                        <div class="text-slate-700 whitespace-pre-wrap text-sm leading-relaxed mb-4">${p.content}</div>
+                        <div class="flex items-start gap-3 mb-3 pr-8">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 flex-shrink-0"><i class="ph-fill ph-user text-xl"></i></div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    ${p.title}
+                                    ${p.pinned ? '<span class="text-[10px] bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Fixado</span>' : ''}
+                                    ${p.urgent ? '<span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Urgente</span>' : ''}
+                                </h4>
+                                <div class="text-xs text-slate-500 font-medium">${p.author} • ${new Date(p.date).toLocaleString('pt-BR', {dateStyle: 'medium', timeStyle: 'short'})}</div>
+                            </div>
+                        </div>
+                        <div class="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed mb-4 pl-[3.25rem]">${p.content}</div>
+                        <div class="pl-[3.25rem] space-y-3">
                     `;
 
-                    if (p.imageUrl) feedHtml += `<img src="${p.imageUrl}" class="max-w-full h-auto rounded-sm border border-slate-200 mb-4 bg-slate-50 p-1">`;
-                    if (p.yt) {
-                        const embed = p.yt.replace('watch?v=', 'embed/');
-                        feedHtml += `<iframe src="${embed}" class="w-full aspect-video border border-slate-200 rounded-sm mb-4" allowfullscreen></iframe>`;
-                    }
-                    if (p.link) feedHtml += `<a href="${p.link}" target="_blank" class="btn-secondary text-brand-primary border-brand-primary/30 inline-flex"><i class="ph ph-link"></i> Acessar Documento Externo</a>`;
+                    if (p.imageUrl) feedHtml += `<img src="${p.imageUrl}" class="w-full max-h-80 object-cover rounded-xl border border-slate-100">`;
+                    if (p.link) feedHtml += `<a href="${p.link}" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-800 bg-brand-50 px-4 py-2 rounded-lg transition-colors"><i class="ph ph-link"></i> Acessar Link Externo</a>`;
                     
-                    feedHtml += `</div>`;
+                    feedHtml += `</div></div>`;
                 });
                 feed.innerHTML = feedHtml;
             });
@@ -853,7 +1120,7 @@
 
         window.handlePostMural = async (e) => {
             e.preventDefault();
-            setBtnLoading('mu-btn', true, '');
+            setBtnLoading('mu-btn', true);
             
             let imageUrl = '';
             const fileInput = document.getElementById('mu-img');
@@ -865,7 +1132,7 @@
                     const data = await res.json();
                     if(data.success) imageUrl = data.data.url;
                 } catch(err) {
-                    window.showToast('Erro no upload do anexo.', 'error');
+                    window.showToast('Erro no upload da imagem.', 'error');
                 }
             }
 
@@ -873,7 +1140,6 @@
                 title: document.getElementById('mu-title').value,
                 content: document.getElementById('mu-content').value,
                 link: document.getElementById('mu-link').value,
-                yt: document.getElementById('mu-yt').value,
                 pinned: document.getElementById('mu-pin').checked,
                 urgent: document.getElementById('mu-urgent').checked,
                 imageUrl,
@@ -883,47 +1149,54 @@
 
             await push(ref(db, 'mural'), post);
             e.target.reset();
-            setBtnLoading('mu-btn', false, 'Publicar Comunicado');
-            window.showToast('Comunicado despachado ao mural.', 'success');
+            setBtnLoading('mu-btn', false);
+            window.showToast('Comunicado publicado.', 'success');
         };
 
+        // CERTIFICADOS (PROFESSOR)
         function renderCertificatesProf(container) {
             container.innerHTML = `
-                <div class="card max-w-3xl mx-auto">
-                    <h3 class="card-header"><i class="ph ph-certificate text-brand-primary"></i> Setor de Emissão de Certificados</h3>
-                    <form onsubmit="window.handleGenerateCert(event)" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">ALUNO BENEFICIÁRIO</label><select id="cert-aluno" required class="input-standard"></select></div>
-                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">NATUREZA DA ATIVIDADE</label><select id="cert-sim" required class="input-standard"></select></div>
+                <div class="max-w-2xl mx-auto card-modern">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i class="ph-fill ph-certificate text-3xl"></i>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">CARGA HORÁRIA COMPUTADA</label><input type="number" id="cert-horas" value="4" required class="input-standard"></div>
-                            <div><label class="block text-xs font-semibold text-slate-500 mb-1">ENTIDADE EMISSORA</label><input type="text" id="cert-inst" value="Escola Modelo de Ensino" required class="input-standard"></div>
+                        <h3 class="text-xl font-bold text-slate-800">Emissão de Certificado</h3>
+                        <p class="text-sm text-slate-500">Gere documentos autenticados para os alunos.</p>
+                    </div>
+
+                    <form onsubmit="window.handleGenerateCert(event)" class="space-y-5 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div><label class="block text-sm font-semibold text-slate-700 mb-1">Aluno</label><select id="cert-aluno" required class="input-modern bg-white"></select></div>
+                            <div><label class="block text-sm font-semibold text-slate-700 mb-1">Avaliação / Curso</label><select id="cert-sim" required class="input-modern bg-white"></select></div>
                         </div>
-                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">CHANCELA VISUAL (Logo Opcional)</label><input type="file" id="cert-logo" accept="image/*" class="input-standard bg-slate-50"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div><label class="block text-sm font-semibold text-slate-700 mb-1">Carga Horária (h)</label><input type="number" id="cert-horas" value="4" required class="input-modern bg-white"></div>
+                            <div><label class="block text-sm font-semibold text-slate-700 mb-1">Instituição</label><input type="text" id="cert-inst" value="Instituto de Ensino Modelo" required class="input-modern bg-white"></div>
+                        </div>
                         
-                        <div class="pt-4 border-t mt-4 text-right">
-                            <button type="submit" id="cert-btn" class="btn-primary bg-yellow-600 hover:bg-yellow-700 border-yellow-700"><i class="ph ph-printer"></i> Gerar Documento Oficial</button>
+                        <div class="pt-4 mt-2">
+                            <button type="submit" id="cert-btn" class="w-full btn-modern bg-slate-800 text-white hover:bg-black shadow-md text-lg h-12">
+                                <i class="ph-bold ph-printer"></i> Gerar e Visualizar Documento
+                            </button>
                         </div>
                     </form>
                 </div>
             `;
 
             get(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno'))).then(snap => {
-                let html = '<option value="">-- Selecione o Aluno --</option>';
+                let html = '<option value="">-- Escolher Aluno --</option>';
                 if(snap.exists()) {
-                    const data = snap.val();
-                    window.localAlunos = data;
-                    Object.keys(data).forEach(k => html += `<option value="${k}">${data[k].nome}</option>`);
+                    window.localAlunos = snap.val();
+                    Object.keys(window.localAlunos).forEach(k => html += `<option value="${k}">${window.localAlunos[k].nome}</option>`);
                 }
                 document.getElementById('cert-aluno').innerHTML = html;
             });
             get(ref(db, 'simulados')).then(snap => {
-                let html = '<option value="">-- Selecione a Atividade --</option>';
+                let html = '<option value="">-- Escolher Avaliação --</option>';
                 if(snap.exists()) {
-                    const data = snap.val();
-                    window.localSims = data;
-                    Object.keys(data).forEach(k => html += `<option value="${k}">${data[k].nome}</option>`);
+                    window.localSims = snap.val();
+                    Object.keys(window.localSims).forEach(k => html += `<option value="${k}">${window.localSims[k].nome}</option>`);
                 }
                 document.getElementById('cert-sim').innerHTML = html;
             });
@@ -931,7 +1204,7 @@
 
         window.handleGenerateCert = async (e) => {
             e.preventDefault();
-            setBtnLoading('cert-btn', true, '');
+            setBtnLoading('cert-btn', true);
             
             const alunoId = document.getElementById('cert-aluno').value;
             const simId = document.getElementById('cert-sim').value;
@@ -939,34 +1212,22 @@
             const sim = window.localSims[simId];
             
             const validationCode = Math.random().toString(36).substring(2, 8).toUpperCase() + Date.now().toString(36).substring(4).toUpperCase();
-            let logoUrl = '';
-
-            const fileInput = document.getElementById('cert-logo');
-            if (fileInput.files.length > 0) {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                try {
-                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if(data.success) logoUrl = data.data.url;
-                } catch(err) { console.error(err); }
-            }
 
             const certData = {
                 alunoId, alunoNome: aluno.nome, turmaId: aluno.turmaId || 'Sem Turma',
                 simuladoNome: sim.nome, horas: document.getElementById('cert-horas').value,
-                instituicao: document.getElementById('cert-inst').value, logoUrl,
+                instituicao: document.getElementById('cert-inst').value, 
                 dataEmissao: new Date().toISOString(), codigo: validationCode,
                 professor: userData.nome
             };
 
             await push(ref(db, 'certificados'), certData);
-            setBtnLoading('cert-btn', false, '<i class="ph ph-printer"></i> Gerar Documento Oficial');
+            setBtnLoading('cert-btn', false);
             e.target.reset();
             window.showPrintOverlay(certData);
         };
 
-        // === IMPLEMENTAÇÃO DAS VIEWS (ALUNO) ===
+        // === VIEWS: ALUNO ===
 
         function renderStudentDashboard(container) {
             get(ref(db, `notas/${currentUser.uid}`)).then(ntSnap => {
@@ -976,44 +1237,50 @@
                     const keys = Object.keys(notas);
                     
                     if (keys.length === 0) {
-                        container.innerHTML = `<div class="card text-center py-12"><i class="ph ph-chart-line-down text-6xl text-slate-300 mb-4"></i><h3 class="text-xl font-bold text-slate-700">Sem registros letivos.</h3><p class="text-slate-500">Seus desempenhos aparecerão aqui após as avaliações.</p></div>`;
+                        container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-20 text-center">
+                            <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6"><i class="ph-fill ph-empty text-5xl text-slate-300"></i></div>
+                            <h3 class="text-xl font-bold text-slate-700">Ainda não há resultados</h3>
+                            <p class="text-slate-500 max-w-md mt-2">Assim que seus professores lançarem as notas das avaliações, seus gráficos aparecerão aqui.</p>
+                        </div>`;
                         return;
                     }
 
                     const lastSimId = keys[keys.length - 1];
                     const g = notas[lastSimId];
-                    const simName = sims[lastSimId] ? sims[lastSimId].nome : 'Avaliação';
+                    const simName = sims[lastSimId] ? sims[lastSimId].nome : 'Última Avaliação';
 
                     container.innerHTML = `
-                        <div class="card border-l-4 border-l-brand-primary">
-                            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Síntese do Último Exame</h3>
-                            <h2 class="text-2xl font-bold text-brand-dark">${simName}</h2>
+                        <div class="mb-8 flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Seu Desempenho</h2>
+                                <p class="text-slate-500 font-medium mt-1 text-sm bg-brand-50 text-brand-700 px-3 py-1 rounded-full inline-block">Referência: ${simName}</p>
+                            </div>
+                            <div class="text-right bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Pontuação Final</p>
+                                <p class="text-4xl font-black text-brand-600 leading-none">${g.total}</p>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-                            ${buildGradeBar('Linguagens', g.lc, '#ec4899')}
-                            ${buildGradeBar('Matemática', g.mt, '#3b82f6')}
-                            ${buildGradeBar('C. Humanas', g.ch, '#eab308')}
-                            ${buildGradeBar('C. Natureza', g.cn, '#22c55e')}
-                            ${buildGradeBar('Redação', g.red, '#a855f7')}
-                        </div>
-                        <div class="mt-8 text-center bg-white border border-slate-200 p-6 rounded-sm shadow-sm">
-                            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Escala Cumulativa Global</p>
-                            <p class="text-5xl font-black text-brand-dark mt-2 tracking-tighter">${g.total}</p>
+                        
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                            ${buildGradeCardModern('Linguagens', g.lc, 'text-pink-600', 'bg-pink-50', 'border-pink-200')}
+                            ${buildGradeCardModern('Matemática', g.mt, 'text-blue-600', 'bg-blue-50', 'border-blue-200')}
+                            ${buildGradeCardModern('C. Humanas', g.ch, 'text-amber-600', 'bg-amber-50', 'border-amber-200')}
+                            ${buildGradeCardModern('C. Natureza', g.cn, 'text-emerald-600', 'bg-emerald-50', 'border-emerald-200')}
+                            ${buildGradeCardModern('Redação', g.red, 'text-purple-600', 'bg-purple-50', 'border-purple-200')}
                         </div>
                     `;
                 });
             });
         }
 
-        function buildGradeBar(title, score, color) {
+        function buildGradeCardModern(title, score, textColor, bgColor, borderColor) {
             const h = Math.min((score||0) / 10, 100);
             return `
-            <div class="flex flex-col items-center bg-white border border-slate-200 rounded-sm pt-4 overflow-hidden">
-                <div class="h-40 w-full relative bg-slate-100 flex items-end justify-center px-4">
-                    <div class="w-full rounded-t-sm" style="height:${h}%; background-color:${color}; transition: height 1s ease-out;"></div>
-                    <span class="absolute bottom-2 text-white font-bold drop-shadow-md z-10 text-shadow">${score||0}</span>
-                </div>
-                <div class="w-full py-2 text-center border-t border-slate-200 bg-slate-50 text-xs font-bold text-slate-600 uppercase tracking-wide truncate px-1">${title}</div>
+            <div class="card-modern flex flex-col items-center justify-between p-6 ${bgColor} border ${borderColor} shadow-none relative overflow-hidden group">
+                <div class="absolute bottom-0 left-0 w-full bg-white/40 transition-all duration-1000 ease-out" style="height: ${h}%;"></div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 relative z-10 text-center mb-4">${title}</h4>
+                <div class="text-4xl font-black ${textColor} relative z-10">${score||0}</div>
             </div>`;
         }
 
@@ -1024,58 +1291,79 @@
                     const sims = smSnap.exists() ? smSnap.val() : {};
 
                     let html = `
-                        <div class="card" id="boletim-print">
-                            <div class="flex justify-between items-center mb-4 border-b pb-4">
+                        <div class="card-modern" id="boletim-print">
+                            <div class="flex justify-between items-center mb-6">
                                 <div>
-                                    <h3 class="text-xl font-bold text-brand-dark">Histórico Escolar Padrão</h3>
-                                    <p class="text-sm text-slate-500">Documento Informativo - ${userData.nome}</p>
+                                    <h3 class="text-xl font-bold text-slate-800">Histórico de Notas</h3>
+                                    <p class="text-sm text-slate-500">Acompanhamento evolutivo</p>
                                 </div>
-                                <button onclick="window.print()" class="no-print btn-secondary text-brand-dark"><i class="ph ph-printer"></i> Imprimir Extrato</button>
+                                <button onclick="window.print()" class="no-print btn-modern btn-secondary text-sm">
+                                    <i class="ph ph-printer text-lg"></i> Imprimir Extrato
+                                </button>
                             </div>
-                            <table class="table-standard text-center"><thead><tr>
-                                <th class="text-left">Referência da Avaliação</th>
-                                <th>L.C.</th><th>M.T.</th><th>C.H.</th><th>C.N.</th><th>RED</th>
-                                <th class="bg-slate-200 text-brand-dark font-bold">PONTUAÇÃO GLOBAL</th>
-                            </tr></thead><tbody>`;
+                            <div class="overflow-x-auto rounded-xl border border-slate-100">
+                                <table class="table-clean text-center whitespace-nowrap"><thead><tr>
+                                    <th class="text-left">Avaliação</th>
+                                    <th>LC</th><th>MT</th><th>CH</th><th>CN</th><th>RED</th>
+                                    <th class="bg-brand-50 text-brand-800">TOTAL</th>
+                                </tr></thead><tbody>`;
                     
                     if (Object.keys(notas).length === 0) {
-                        html += `<tr><td colspan="7" class="text-slate-500 py-6">Ausência de registros avaliativos.</td></tr>`;
+                        html += `<tr><td colspan="7" class="text-slate-400 py-12 text-center">Nenhum registro encontrado no histórico.</td></tr>`;
                     } else {
                         Object.keys(notas).forEach(simId => {
                             const g = notas[simId];
-                            const sName = sims[simId] ? sims[simId].nome : 'Registrado';
+                            const sName = sims[simId] ? sims[simId].nome : 'Avaliação Anônima';
                             html += `<tr>
-                                <td class="text-left font-medium text-slate-700">${sName}</td>
+                                <td class="text-left font-semibold text-slate-700">${sName}</td>
                                 <td>${g.lc}</td><td>${g.mt}</td><td>${g.ch}</td><td>${g.cn}</td><td>${g.red}</td>
-                                <td class="font-bold bg-slate-50">${g.total}</td>
+                                <td class="font-bold text-brand-600 bg-brand-50/30 text-lg">${g.total}</td>
                             </tr>`;
                         });
                     }
-                    html += `</tbody></table></div>`;
+                    html += `</tbody></table></div></div>`;
                     container.innerHTML = html;
                 });
             });
         }
 
         function renderCertificatesStudent(container) {
-            container.innerHTML = `<div class="card"><h3 class="card-header"><i class="ph ph-folder-notch text-brand-primary"></i> Acervo de Certificações</h3><div id="student-certs-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">Carregando acervo...</div></div>`;
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Meus Certificados</h2>
+                    <p class="text-slate-500">Documentos emitidos pela instituição.</p>
+                </div>
+                <div id="student-certs-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="col-span-full flex justify-center py-10"><div class="spinner text-brand-500"></div></div>
+                </div>
+            `;
             
             const unsub = onValue(query(ref(db, 'certificados'), orderByChild('alunoId'), equalTo(currentUser.uid)), snap => {
                 const div = document.getElementById('student-certs-container');
-                if(!snap.exists()) { div.innerHTML = '<div class="col-span-3 text-center text-slate-500 py-6">Nenhum documento averbado em seu nome.</div>'; return; }
+                if(!snap.exists()) { 
+                    div.innerHTML = '<div class="col-span-full card-modern text-center py-16 text-slate-400"><i class="ph ph-folder-open text-5xl mb-3"></i><p>Nenhum certificado disponível.</p></div>'; 
+                    return; 
+                }
                 
                 let html = '';
                 snap.forEach(child => {
                     const c = child.val();
-                    // Armazena no window temporariamente para o clique
                     window[`cert_${child.key}`] = c;
                     html += `
-                        <div class="border border-slate-200 rounded-sm p-6 text-center bg-white shadow-sm hover:border-brand-primary transition">
-                            <i class="ph ph-seal-check text-4xl text-yellow-600 mb-3"></i>
-                            <h4 class="font-bold text-slate-800 text-sm h-10 overflow-hidden uppercase leading-snug">${c.simuladoNome}</h4>
-                            <div class="w-8 h-1 bg-slate-200 mx-auto my-3"></div>
-                            <p class="text-xs text-slate-500 mb-4 font-mono">${c.codigo}</p>
-                            <button onclick="window.showPrintOverlay(window['cert_${child.key}'])" class="w-full btn-secondary text-brand-primary justify-center">Visualizar Via</button>
+                        <div class="card-modern text-center group hover:border-brand-500 transition-colors flex flex-col justify-between">
+                            <div>
+                                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="ph-fill ph-seal-check text-3xl"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">${c.simuladoNome}</h4>
+                                <p class="text-xs text-slate-500 font-medium mb-4">${c.instituicao}</p>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 font-mono bg-slate-50 py-1 px-2 rounded mb-4">${c.codigo}</div>
+                                <button onclick="window.showPrintOverlay(window['cert_${child.key}'])" class="w-full btn-modern btn-secondary text-brand-600 group-hover:bg-brand-50 group-hover:border-brand-200">
+                                    Visualizar Documento
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
@@ -1084,57 +1372,71 @@
             activeListeners.push(unsub);
         }
 
-        // === ENGINE DE IMPRESSÃO (CERTIFICADOS) ===
+        // === IMPRESSÃO DE CERTIFICADOS ===
 
         window.showPrintOverlay = (cert) => {
             const printArea = document.getElementById('print-area');
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=VALIDACAO:${cert.codigo}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VALIDACAO:${cert.codigo}`;
             
             printArea.innerHTML = `
-                <div class="no-print fixed top-0 w-full bg-brand-dark text-white p-4 flex justify-between z-50 shadow-md items-center">
-                    <span class="font-bold text-sm tracking-widest uppercase">Modo de Visualização Documental</span>
-                    <div class="flex gap-2">
-                        <button onclick="window.print()" class="btn-primary bg-yellow-600 border-yellow-600 hover:bg-yellow-700 text-black"><i class="ph ph-printer"></i> Imprimir</button>
-                        <button onclick="document.getElementById('print-area').style.display='none'" class="btn-secondary text-white border-slate-600 bg-transparent hover:bg-slate-800"><i class="ph ph-x"></i> Fechar</button>
+                <div class="no-print fixed top-0 left-0 w-full bg-slate-900 text-white p-4 flex justify-between z-50 items-center">
+                    <span class="font-bold text-sm tracking-widest uppercase flex items-center gap-2"><i class="ph ph-eye"></i> Visualização de Documento</span>
+                    <div class="flex gap-3">
+                        <button onclick="window.print()" class="btn-modern bg-white text-slate-900 hover:bg-slate-200"><i class="ph-bold ph-printer"></i> Imprimir / Salvar PDF</button>
+                        <button onclick="document.getElementById('print-area').style.display='none'" class="btn-modern bg-slate-800 text-white hover:bg-slate-700 border border-slate-700"><i class="ph ph-x"></i> Fechar</button>
                     </div>
                 </div>
                 
-                <div class="flex justify-center items-center min-h-screen bg-slate-800 pt-20 pb-10">
-                    <div class="bg-white text-black w-[297mm] h-[210mm] relative flex flex-col p-16 box-border border-[12px] border-double border-slate-300 print:border-none print:w-full print:h-full print:p-8" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+                <div class="flex justify-center items-center min-h-screen bg-slate-800 pt-20 pb-10 print:bg-white print:p-0">
+                    <!-- Folha A4 Paisagem simulada -->
+                    <div class="bg-white text-slate-900 w-[297mm] h-[210mm] relative flex flex-col p-16 box-border print:w-full print:h-full print:p-8" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
                         
-                        <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none overflow-hidden">
-                            <i class="ph ph-certificate" style="font-size: 800px;"></i>
+                        <!-- Borda Decorativa -->
+                        <div class="absolute inset-4 border-[3px] border-slate-800 p-1">
+                            <div class="w-full h-full border border-slate-800"></div>
                         </div>
 
-                        <div class="z-10 flex justify-between items-start mb-10 border-b-2 border-slate-800 pb-6">
-                            ${cert.logoUrl ? `<img src="${cert.logoUrl}" class="h-20 object-contain">` : `<h2 class="text-2xl font-serif font-bold uppercase tracking-widest">${cert.instituicao}</h2>`}
-                            <div class="text-right">
-                                <p class="text-xs font-bold tracking-widest uppercase text-slate-500 mb-1">Autenticação Digital</p>
-                                <p class="font-mono text-lg font-bold border border-slate-800 px-3 py-1 bg-slate-50">${cert.codigo}</p>
-                            </div>
+                        <!-- Marca D'água -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none">
+                            <i class="ph-fill ph-certificate" style="font-size: 600px;"></i>
                         </div>
 
-                        <div class="flex-1 flex flex-col items-center justify-center text-center px-12">
-                            <h1 class="text-5xl font-serif font-bold text-slate-900 mb-10 tracking-[0.2em] uppercase">Certificado de Conclusão</h1>
-                            <p class="text-lg text-slate-600 mb-4 uppercase tracking-widest">Confere-se o presente a</p>
-                            <h2 class="text-4xl font-bold text-black mb-8 border-b-2 border-slate-300 pb-2 inline-block px-12 uppercase">${cert.alunoNome}</h2>
-                            <p class="text-lg text-slate-700 leading-loose max-w-4xl text-justify">
-                                Por ter participado e concluído com aproveitamento as atividades referentes ao programa <strong class="uppercase">${cert.simuladoNome}</strong>, totalizando carga horária de <strong>${cert.horas} horas</strong> sob a jurisdição institucional da entidade organizadora.
-                            </p>
-                        </div>
-
-                        <div class="flex justify-between items-end mt-12 pt-8">
-                            <div class="flex gap-4 items-center">
-                                <img src="${qrUrl}" class="w-20 h-20 border border-slate-200 p-1">
-                                <div class="text-[10px] text-slate-500 font-mono">
-                                    DOCUMENTO GERADO ELETRONICAMENTE<br>
-                                    Código: ${cert.codigo}<br>
-                                    Emissão: ${new Date(cert.dataEmissao).toLocaleString('pt-BR')}
+                        <div class="relative z-10 flex flex-col h-full">
+                            <!-- Header Certificado -->
+                            <div class="flex justify-between items-start mb-12 border-b-2 border-slate-200 pb-6">
+                                <h2 class="text-2xl font-serif font-bold uppercase tracking-widest text-slate-800">${cert.instituicao}</h2>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-1">Registro de Autenticidade</p>
+                                    <p class="font-mono text-lg font-bold text-slate-800">${cert.codigo}</p>
                                 </div>
                             </div>
-                            <div class="text-center w-72">
-                                <div class="border-t border-slate-800 pt-2 font-serif text-lg">${cert.professor}</div>
-                                <div class="text-xs uppercase tracking-widest text-slate-500 mt-1">Autoridade Certificadora</div>
+
+                            <!-- Corpo -->
+                            <div class="flex-1 flex flex-col items-center justify-center text-center px-16">
+                                <h1 class="text-5xl font-serif font-bold text-slate-900 mb-10 tracking-[0.15em] uppercase">Certificado</h1>
+                                <p class="text-lg text-slate-600 mb-6 uppercase tracking-widest">Certificamos que</p>
+                                <h2 class="text-4xl font-bold text-slate-800 mb-8 pb-2 inline-block px-8 uppercase border-b-2 border-slate-300">${cert.alunoNome}</h2>
+                                <p class="text-lg text-slate-700 leading-relaxed max-w-3xl">
+                                    Concluiu com êxito as atividades curriculares e avaliativas referentes ao programa 
+                                    <strong class="uppercase text-slate-900">${cert.simuladoNome}</strong>, perfazendo a carga horária 
+                                    total de <strong class="text-slate-900">${cert.horas} horas</strong>.
+                                </p>
+                            </div>
+
+                            <!-- Footer Certificado -->
+                            <div class="flex justify-between items-end mt-12 pt-8">
+                                <div class="flex gap-4 items-center">
+                                    <img src="${qrUrl}" class="w-24 h-24 p-1 bg-white border border-slate-200">
+                                    <div class="text-[10px] text-slate-500 font-mono leading-tight">
+                                        DOCUMENTO DIGITAL<br>
+                                        Verifique a autenticidade via QR Code<br>
+                                        Data: ${new Date(cert.dataEmissao).toLocaleDateString('pt-BR')}
+                                    </div>
+                                </div>
+                                <div class="text-center w-80">
+                                    <div class="border-t border-slate-800 pt-2 font-serif text-xl font-bold text-slate-800">${cert.professor}</div>
+                                    <div class="text-xs uppercase tracking-widest text-slate-500 mt-1">Coordenação Pedagógica</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1146,7 +1448,7 @@
         // === VALIDAÇÃO PÚBLICA ===
         
         window.showValidationView = () => {
-            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('auth-view').style.display = 'none';
             document.getElementById('validation-view').style.display = 'flex';
             document.getElementById('val-result').innerHTML = '';
             document.getElementById('val-code').value = '';
@@ -1154,48 +1456,57 @@
 
         window.hideValidationView = () => {
             document.getElementById('validation-view').style.display = 'none';
-            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('auth-view').style.display = 'flex';
         };
 
         window.handleValidateCertificate = async (e) => {
             e.preventDefault();
             const code = document.getElementById('val-code').value.trim().toUpperCase();
             const resDiv = document.getElementById('val-result');
-            resDiv.innerHTML = '<div class="text-center py-4"><div class="spinner border-brand-primary border-top-transparent mx-auto"></div></div>';
-
-            const snap = await get(query(ref(db, 'certificados'), orderByChild('codigo'), equalTo(code)));
             
-            if (snap.exists()) {
-                const cert = Object.values(snap.val())[0];
-                resDiv.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 p-6 rounded-sm">
-                        <div class="flex items-center gap-3 mb-4 border-b border-green-200 pb-3">
-                            <i class="ph ph-check-circle text-3xl text-green-700"></i>
-                            <div><h3 class="font-bold text-green-800 text-lg uppercase tracking-wide">Documento Autêntico</h3><p class="text-xs text-green-600">Registro Localizado na Base de Dados</p></div>
+            setBtnLoading('btn-validate', true);
+            resDiv.innerHTML = '';
+
+            try {
+                const snap = await get(query(ref(db, 'certificados'), orderByChild('codigo'), equalTo(code)));
+                
+                if (snap.exists()) {
+                    const cert = Object.values(snap.val())[0];
+                    resDiv.innerHTML = `
+                        <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-xl animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex items-center gap-4 mb-6 border-b border-emerald-200 pb-4">
+                                <i class="ph-fill ph-check-circle text-4xl text-emerald-600"></i>
+                                <div>
+                                    <h3 class="font-bold text-emerald-800 text-lg uppercase tracking-wide">Documento Autêntico</h3>
+                                    <p class="text-xs text-emerald-600 font-medium">Verificado no banco de dados da instituição</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Titular</span> <span class="font-bold text-slate-800 uppercase">${cert.alunoNome}</span></div>
+                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Atividade</span> <span class="font-bold text-slate-800">${cert.simuladoNome}</span></div>
+                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Carga Horária</span> <span class="font-bold text-slate-800">${cert.horas}h</span></div>
+                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Data de Emissão</span> <span class="font-bold text-slate-800">${new Date(cert.dataEmissao).toLocaleDateString('pt-BR')}</span></div>
+                                <div class="flex justify-between"><span class="text-emerald-700 font-medium">Instituição</span> <span class="font-bold text-slate-800">${cert.instituicao}</span></div>
+                            </div>
                         </div>
-                        <table class="w-full text-sm">
-                            <tr><td class="py-1 text-slate-500 font-semibold w-1/3">Titular</td><td class="font-bold text-slate-800 uppercase">${cert.alunoNome}</td></tr>
-                            <tr><td class="py-1 text-slate-500 font-semibold">Atividade</td><td class="font-medium text-slate-800">${cert.simuladoNome}</td></tr>
-                            <tr><td class="py-1 text-slate-500 font-semibold">Carga Horária</td><td class="font-medium text-slate-800">${cert.horas}h</td></tr>
-                            <tr><td class="py-1 text-slate-500 font-semibold">Emissão</td><td class="font-medium text-slate-800">${new Date(cert.dataEmissao).toLocaleDateString('pt-BR')}</td></tr>
-                            <tr><td class="py-1 text-slate-500 font-semibold">Instituição</td><td class="font-medium text-slate-800">${cert.instituicao}</td></tr>
-                        </table>
-                    </div>
-                `;
-            } else {
-                resDiv.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 p-6 rounded-sm flex items-start gap-3">
-                        <i class="ph ph-warning-circle text-3xl text-red-600"></i>
-                        <div><h3 class="font-bold text-red-800 text-lg uppercase tracking-wide">Certidão Inválida</h3><p class="text-sm text-red-600 mt-1">O código informado não possui correspondência em nossos assentamentos eletrônicos oficiais.</p></div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    resDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 p-6 rounded-xl flex items-center gap-4 animate-[fadeIn_0.3s_ease-out]">
+                            <i class="ph-fill ph-warning-circle text-4xl text-red-500"></i>
+                            <div>
+                                <h3 class="font-bold text-red-800 text-lg uppercase tracking-wide">Certidão Inválida</h3>
+                                <p class="text-sm text-red-600 mt-1">O código informado não consta em nossos registros oficiais.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                window.showToast("Erro ao validar certificado", "error");
+            } finally {
+                setBtnLoading('btn-validate', false);
             }
         };
-
-        // Adiciona CSS para o text-shadow usado nos gráficos
-        const style = document.createElement('style');
-        style.innerHTML = `.text-shadow { text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }`;
-        document.head.appendChild(style);
 
     </script>
 </body>
