@@ -11,6 +11,9 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
+    <!-- HTML2Canvas para gerar a imagem PNG do Certificado -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- Configuração de Tema Moderno -->
     <script>
         tailwind.config = {
@@ -534,7 +537,11 @@
         onAuthStateChanged(auth, (user) => {
             if (userListenerUnsubscribe) { userListenerUnsubscribe(); userListenerUnsubscribe = null; }
 
-            if (user) {
+            // Verifica se a página foi aberta via QR Code (contém ?val= na URL)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isValidationMode = urlParams.has('val');
+
+            if (user && !isValidationMode) {
                 currentUser = user;
                 const userRef = ref(db, `usuarios/${user.uid}`);
                 
@@ -553,7 +560,7 @@
                         }
                     }
                 });
-            } else {
+            } else if (!isValidationMode) {
                 currentUser = null;
                 userData = null;
                 document.getElementById('app-view').style.display = 'none';
@@ -1467,19 +1474,27 @@
 
         window.showPrintOverlay = (cert) => {
             const printArea = document.getElementById('print-area');
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VALIDACAO:${cert.codigo}`;
             
+            // Cria a URL completa apontando para o próprio site com o parâmetro de validação
+            const baseUrl = window.location.origin + window.location.pathname;
+            const validationUrl = `${baseUrl}?val=${cert.codigo}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(validationUrl)}`;
+            
+            // Salva o certificado atual globalmente para a função de download PNG usar
+            window.currentViewingCert = cert;
+
             printArea.innerHTML = `
                 <div class="no-print fixed top-0 left-0 w-full bg-slate-900 text-white p-4 flex justify-between z-50 items-center">
-                    <span class="font-bold text-sm tracking-widest uppercase flex items-center gap-2"><i class="ph ph-eye"></i> Visualização de Documento</span>
+                    <span class="font-bold text-sm tracking-widest uppercase flex items-center gap-2"><i class="ph ph-eye"></i> Documento Autenticado</span>
                     <div class="flex gap-3">
+                        <button onclick="window.downloadCertPNG()" class="btn-modern bg-brand-600 text-white hover:bg-brand-500 border border-brand-500"><i class="ph-bold ph-download-simple"></i> Baixar Imagem (PNG)</button>
                         <button onclick="window.print()" class="btn-modern bg-white text-slate-900 hover:bg-slate-200"><i class="ph-bold ph-printer"></i> Imprimir / Salvar PDF</button>
-                        <button onclick="document.getElementById('print-area').style.display='none'" class="btn-modern bg-slate-800 text-white hover:bg-slate-700 border border-slate-700"><i class="ph ph-x"></i> Fechar</button>
+                        <button onclick="window.closePrintOverlay()" class="btn-modern bg-slate-800 text-white hover:bg-slate-700 border border-slate-700"><i class="ph ph-x"></i> Fechar</button>
                     </div>
                 </div>
                 
                 <div class="flex justify-center items-center min-h-screen bg-slate-800 pt-20 pb-10 print:bg-white print:p-0">
-                    <div class="bg-white text-slate-900 w-[297mm] h-[210mm] relative flex flex-col p-16 box-border print:w-full print:h-full print:p-8" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <div id="certificado-render" class="bg-white text-slate-900 w-[297mm] h-[210mm] relative flex flex-col p-16 box-border print:w-full print:h-full print:p-8" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
                         
                         <div class="absolute inset-4 border-[3px] border-slate-800 p-1">
                             <div class="w-full h-full border border-slate-800"></div>
@@ -1511,7 +1526,7 @@
 
                             <div class="flex justify-between items-end mt-12 pt-8">
                                 <div class="flex gap-4 items-center">
-                                    <img src="${qrUrl}" class="w-24 h-24 p-1 bg-white border border-slate-200">
+                                    <img src="${qrUrl}" class="w-24 h-24 p-1 bg-white border border-slate-200" alt="QR Code de Validação">
                                     <div class="text-[10px] text-slate-500 font-mono leading-tight">
                                         DOCUMENTO DIGITAL<br>
                                         Verifique a autenticidade via QR Code<br>
@@ -1530,6 +1545,37 @@
             printArea.style.display = 'block';
         };
 
+        window.closePrintOverlay = () => {
+            document.getElementById('print-area').style.display = 'none';
+            // Se o usuário veio pelo link do QR Code e fechar, volta pra tela de validação ou login
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has('val')) {
+                window.location.search = ''; // Limpa a URL e recarrega para o login
+            }
+        }
+
+        window.downloadCertPNG = async () => {
+            const certElement = document.getElementById('certificado-render');
+            if(!certElement) return;
+            
+            try {
+                // Remove a sombra para o print ficar limpo na imagem
+                const originalShadow = certElement.style.boxShadow;
+                certElement.style.boxShadow = 'none';
+                
+                const canvas = await html2canvas(certElement, { scale: 2, useCORS: true });
+                
+                certElement.style.boxShadow = originalShadow;
+
+                const link = document.createElement('a');
+                link.download = `Certificado_${window.currentViewingCert.codigo}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(e) {
+                window.showToast("Erro ao gerar imagem PNG.", "error");
+            }
+        };
+
         // === VALIDAÇÃO PÚBLICA ===
         
         window.showValidationView = () => {
@@ -1545,10 +1591,12 @@
         };
 
         window.handleValidateCertificate = async (e) => {
-            e.preventDefault();
+            if(e && e.preventDefault) e.preventDefault(); // Suporta chamada direta via URL
             const code = document.getElementById('val-code').value.trim().toUpperCase();
             const resDiv = document.getElementById('val-result');
             
+            if(!code) return;
+
             setBtnLoading('btn-validate', true);
             resDiv.innerHTML = '';
 
@@ -1557,24 +1605,15 @@
                 
                 if (snap.exists()) {
                     const cert = Object.values(snap.val())[0];
-                    resDiv.innerHTML = `
-                        <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-xl animate-[fadeIn_0.3s_ease-out]">
-                            <div class="flex items-center gap-4 mb-6 border-b border-emerald-200 pb-4">
-                                <i class="ph-fill ph-check-circle text-4xl text-emerald-600"></i>
-                                <div>
-                                    <h3 class="font-bold text-emerald-800 text-lg uppercase tracking-wide">Documento Autêntico</h3>
-                                    <p class="text-xs text-emerald-600 font-medium">Verificado no banco de dados da instituição</p>
-                                </div>
-                            </div>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Titular</span> <span class="font-bold text-slate-800 uppercase">${cert.alunoNome}</span></div>
-                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Atividade</span> <span class="font-bold text-slate-800">${cert.simuladoNome}</span></div>
-                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Carga Horária</span> <span class="font-bold text-slate-800">${cert.horas}h</span></div>
-                                <div class="flex justify-between border-b border-emerald-100 pb-2"><span class="text-emerald-700 font-medium">Data de Emissão</span> <span class="font-bold text-slate-800">${new Date(cert.dataEmissao).toLocaleDateString('pt-BR')}</span></div>
-                                <div class="flex justify-between"><span class="text-emerald-700 font-medium">Instituição</span> <span class="font-bold text-slate-800">${cert.instituicao}</span></div>
-                            </div>
-                        </div>
-                    `;
+                    window.showToast("Documento Autêntico! Abrindo certificado...", "success");
+                    
+                    // Mostra um resumo rápido, mas já abre o certificado em tela cheia logo em seguida
+                    resDiv.innerHTML = `<div class="p-6 text-center text-emerald-600 font-bold"><i class="ph ph-spinner animate-spin text-2xl"></i> Preparando documento...</div>`;
+                    
+                    setTimeout(() => {
+                        window.showPrintOverlay(cert);
+                    }, 1000);
+
                 } else {
                     resDiv.innerHTML = `
                         <div class="bg-red-50 border border-red-200 p-6 rounded-xl flex items-center gap-4 animate-[fadeIn_0.3s_ease-out]">
@@ -1592,6 +1631,25 @@
                 setBtnLoading('btn-validate', false);
             }
         };
+
+        // Lógica para auto-validar quando entra via QR Code
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const valCode = urlParams.get('val');
+            
+            if (valCode) {
+                // Esconde tela de login
+                document.getElementById('auth-view').style.display = 'none';
+                document.getElementById('app-view').style.display = 'none';
+                
+                // Mostra tela de validação e preenche o código
+                window.showValidationView();
+                document.getElementById('val-code').value = valCode;
+                
+                // Dispara a validação automaticamente
+                window.handleValidateCertificate({ preventDefault: () => {} });
+            }
+        });
 
     </script>
 </body>
