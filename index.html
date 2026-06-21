@@ -326,7 +326,7 @@
     <!-- LOGICA DO SISTEMA (JAVASCRIPT / FIREBASE)  -->
     <!-- ========================================== -->
     <script type="module">
-        // Importações do Firebase v11 (Incluindo funções de E-mail)
+        // Importações do Firebase v11
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, 
@@ -337,7 +337,7 @@
             getDatabase, ref, set, push, get, onValue, remove, update, query, orderByChild, equalTo 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Configuração mantida conforme fornecida pelo usuário
+        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAEDi-eQJgTc_IW1s-pd0dcjQTFBpb9dLM",
             authDomain: "portalsimulado-88969.firebaseapp.com",
@@ -361,7 +361,20 @@
         let isLoginMode = true;
         let activeListeners = []; 
         let userListenerUnsubscribe = null; 
+        
+        // Estado de Notas Redesenhado
         window.tempGrades = {};
+        window.localAlunosForGrades = {};
+        window.currentSubjectTab = 'lc'; // Aba inicial padrão
+
+        // Configuração visual das Matérias (Áreas de Conhecimento)
+        const subjectsConfig = {
+            'lc': { id: 'lc', label: 'Linguagens', icon: 'ph-book-open', color: 'text-pink-600', bg: 'bg-pink-100', border: 'border-pink-200' },
+            'mt': { id: 'mt', label: 'Matemática', icon: 'ph-calculator', color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' },
+            'ch': { id: 'ch', label: 'C. Humanas', icon: 'ph-globe-hemisphere-west', color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-200' },
+            'cn': { id: 'cn', label: 'C. Natureza', icon: 'ph-plant', color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-200' },
+            'red': { id: 'red', label: 'Redação', icon: 'ph-pen-nib', color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200' }
+        };
 
         // === UI UTILS ===
 
@@ -404,12 +417,11 @@
             activeListeners = [];
         }
 
-        // === AUTH & EMAIL LOGIC ===
+        // === AUTH LOGIC ===
 
         window.switchAuthTab = (mode) => {
             isLoginMode = (mode === 'login');
             
-            // UI Tab Styling
             const tLogin = document.getElementById('tab-login');
             const tReg = document.getElementById('tab-register');
             
@@ -446,7 +458,6 @@
                     
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     
-                    // ENVIO DE E-MAIL DE VERIFICAÇÃO AUTOMÁTICO (Funcionalidade solicitada)
                     try {
                         await sendEmailVerification(cred.user);
                         window.showToast('Conta criada! Enviamos um link de confirmação para o seu e-mail.', 'success');
@@ -454,7 +465,6 @@
                         console.error("Erro ao enviar email", emailErr);
                     }
 
-                    // Grava perfil no DB
                     await set(ref(db, `usuarios/${cred.user.uid}`), {
                         nome: name, 
                         email: email, 
@@ -471,10 +481,8 @@
             }
         };
 
-        // RECUPERAÇÃO DE SENHA (Funcionalidade solicitada)
         window.openForgotPassword = () => {
             document.getElementById('modal-forgot-password').style.display = 'flex';
-            // Preenche o campo de e-mail do modal com o que já foi digitado, se houver
             document.getElementById('reset-email').value = document.getElementById('auth-email').value;
         };
         
@@ -523,7 +531,6 @@
             signOut(auth);
         };
 
-        // Observador Principal de Estado
         onAuthStateChanged(auth, (user) => {
             if (userListenerUnsubscribe) { userListenerUnsubscribe(); userListenerUnsubscribe = null; }
 
@@ -558,19 +565,17 @@
             }
         });
 
-        // === INICIALIZAÇÃO DA APLICAÇÃO ===
+        // === INICIALIZAÇÃO ===
 
         function initApp() {
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('validation-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
             
-            // Atualiza Header com Infos do Usuário
             document.getElementById('header-user-name').innerText = userData.nome;
             document.getElementById('header-user-role').innerText = userData.role;
             document.getElementById('header-user-avatar').src = userData.fotoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.nome) + '&background=e0e7ff&color=3730a3';
             
-            // Verifica e exibe banner de email se necessário
             const banner = document.getElementById('email-verification-banner');
             if(!currentUser.emailVerified) banner.classList.remove('hidden');
             else banner.classList.add('hidden');
@@ -612,7 +617,6 @@
             clearListeners();
             currentView = viewId;
             
-            // Sidebar Active State
             document.querySelectorAll('#sidebar-nav button').forEach(btn => {
                 btn.classList.remove('bg-brand-600', 'text-white');
                 btn.classList.add('text-slate-400', 'hover:bg-slate-800');
@@ -625,15 +629,12 @@
                 activeBtn.querySelector('i').classList.add('ph-fill');
             }
 
-            // Title Update
             const item = menus[userData.role].find(i => i.id === viewId);
             document.getElementById('page-title').innerText = item ? item.label : '';
 
-            // Render Layout Container
             const container = document.getElementById('content-container');
             container.innerHTML = '<div class="flex justify-center py-20"><div class="spinner text-brand-600 w-8 h-8"></div></div>';
 
-            // Route handler
             if (userData.role === 'professor') {
                 if(viewId === 'dashboard') renderProfDashboard(container);
                 else if(viewId === 'turmas') renderProfTurmasAlunos(container);
@@ -669,28 +670,16 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Card 1 -->
                     <div class="card-modern flex items-center p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-                        <div class="flex-1">
-                            <p class="text-blue-100 font-medium text-sm">Alunos Matriculados</p>
-                            <h3 class="text-4xl font-bold mt-1">${qtdAlunos}</h3>
-                        </div>
+                        <div class="flex-1"><p class="text-blue-100 font-medium text-sm">Alunos Matriculados</p><h3 class="text-4xl font-bold mt-1">${qtdAlunos}</h3></div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-users text-2xl"></i></div>
                     </div>
-                    <!-- Card 2 -->
                     <div class="card-modern flex items-center p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none">
-                        <div class="flex-1">
-                            <p class="text-emerald-100 font-medium text-sm">Turmas Ativas</p>
-                            <h3 class="text-4xl font-bold mt-1">${qtdTurmas}</h3>
-                        </div>
+                        <div class="flex-1"><p class="text-emerald-100 font-medium text-sm">Turmas Ativas</p><h3 class="text-4xl font-bold mt-1">${qtdTurmas}</h3></div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-chalkboard-teacher text-2xl"></i></div>
                     </div>
-                    <!-- Card 3 -->
                     <div class="card-modern flex items-center p-6 bg-gradient-to-br from-violet-500 to-violet-600 text-white border-none">
-                        <div class="flex-1">
-                            <p class="text-violet-100 font-medium text-sm">Avaliações/Simulados</p>
-                            <h3 class="text-4xl font-bold mt-1">${qtdSimul}</h3>
-                        </div>
+                        <div class="flex-1"><p class="text-violet-100 font-medium text-sm">Avaliações/Simulados</p><h3 class="text-4xl font-bold mt-1">${qtdSimul}</h3></div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center"><i class="ph-fill ph-exam text-2xl"></i></div>
                     </div>
                 </div>
@@ -718,11 +707,10 @@
             `;
         }
 
-        // View Combinada: Turmas e Alunos para ficar menos confuso
+        // === TURMAS E ALUNOS ===
         function renderProfTurmasAlunos(container) {
             container.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Gestão de Turmas -->
                     <div class="lg:col-span-1 space-y-6">
                         <div class="card-modern">
                             <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-plus-circle text-brand-500"></i> Criar Turma</h3>
@@ -738,7 +726,6 @@
                         </div>
                     </div>
 
-                    <!-- Enturmação de Alunos -->
                     <div class="lg:col-span-2 card-modern">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph-fill ph-users text-brand-500"></i> Enturmação de Alunos</h3>
@@ -754,7 +741,6 @@
                 </div>
             `;
 
-            // Setup Listeners for Turmas
             const unsubTurmas = onValue(ref(db, 'turmas'), snap => {
                 let html = '<ul class="divide-y divide-slate-100">';
                 if (snap.exists()) {
@@ -777,7 +763,6 @@
             });
             activeListeners.push(unsubTurmas);
 
-            // Setup Listeners for Alunos
             const unsubAlunos = onValue(query(ref(db, 'usuarios'), orderByChild('role'), equalTo('aluno')), snap => {
                 if (!snap.exists()) {
                     document.getElementById('students-table-container').innerHTML = '<div class="p-8 text-center text-slate-500">Nenhum aluno cadastrado no sistema.</div>';
@@ -789,7 +774,7 @@
             activeListeners.push(unsubAlunos);
         }
 
-        // Generic function for Simulados (can be expanded)
+        // === GENERIC (SIMULADOS) ===
         function renderManageGenerics(container, type, titleInput, extraLabel) {
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -874,7 +859,6 @@
             Object.keys(alunos).forEach(key => {
                 const a = alunos[key];
                 let opts = turmasOpts.replace(`value="${a.turmaId || ''}"`, `value="${a.turmaId || ''}" selected`);
-                
                 const verifiedIcon = a.emailVerified === false ? `<i class="ph-fill ph-warning-circle text-orange-500 ml-1" title="E-mail não verificado"></i>` : '';
 
                 html += `<tr>
@@ -902,36 +886,55 @@
             window.showToast('Turma atualizada.', 'success');
         };
 
-        // NOTAS
+        // ==========================================
+        // NOVO LANÇAMENTO DE NOTAS (COM ABAS)
+        // ==========================================
         function renderManageGrades(container) {
             container.innerHTML = `
-                <div class="card-modern">
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 border-b border-slate-100 pb-6 mb-6">
+                <div class="card-modern shadow-lg border-none bg-white">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph-fill ph-notebook text-brand-500"></i> Diário de Notas (ENEM)</h3>
-                            <p class="text-sm text-slate-500 mt-1">Selecione uma avaliação para lançar ou editar os resultados.</p>
+                            <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="ph-fill ph-notebook text-brand-500"></i> Diário de Notas Inteligente</h3>
+                            <p class="text-sm text-slate-500 mt-1">Selecione uma avaliação e preencha as notas separadas por área de conhecimento.</p>
                         </div>
-                        <div class="w-full sm:w-72">
-                            <select id="grade-sim-select" onchange="window.loadGradesForSim(this.value)" class="input-modern font-semibold text-brand-900 bg-brand-50 border-brand-100 focus:border-brand-500">
+                        <div class="w-full md:w-80">
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Avaliação Base</label>
+                            <select id="grade-sim-select" onchange="window.loadGradesForSim(this.value)" class="input-modern font-semibold text-brand-900 bg-brand-50 border-brand-100 focus:border-brand-500 cursor-pointer">
                                 <option value="">-- Escolher Avaliação --</option>
                             </select>
                         </div>
                     </div>
                     
-                    <div id="grades-editor-container" class="hidden">
-                        <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <div id="grades-editor-container" class="hidden animate-[fadeIn_0.4s_ease-out]">
+                        
+                        <!-- Tabs das Matérias -->
+                        <div id="subject-tabs-container" class="flex gap-2 p-1.5 bg-slate-100 rounded-xl mb-6 overflow-x-auto hide-scroll">
+                            <!-- Injetado pelo JS -->
+                        </div>
+
+                        <!-- Tabela Focada na Matéria -->
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white">
                             <div id="grades-table"></div>
                         </div>
-                        <div class="mt-6 flex justify-end">
-                            <button onclick="window.saveAllGrades()" class="btn-modern bg-emerald-600 text-white hover:bg-emerald-700 shadow-md">
-                                <i class="ph-bold ph-check"></i> Salvar Todos os Resultados
+                        
+                        <!-- Barra de Ações (Rodapé Flutuante Visual) -->
+                        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex items-center gap-2 text-sm text-slate-500 mb-4 sm:mb-0">
+                                <i class="ph-fill ph-info text-slate-400 text-lg"></i>
+                                Dica: Pressione <kbd class="bg-white border border-slate-200 px-1.5 rounded font-mono text-xs">TAB</kbd> para pular rapidamente para o próximo aluno.
+                            </div>
+                            <button onclick="window.saveAllGrades()" class="w-full sm:w-auto btn-modern bg-emerald-600 text-white hover:bg-emerald-700 shadow-md text-base px-8">
+                                <i class="ph-bold ph-check-circle text-xl"></i> Gravar Alterações
                             </button>
                         </div>
                     </div>
 
-                    <div id="grades-placeholder" class="text-center py-16 text-slate-400">
-                        <i class="ph ph-hand-pointing text-4xl mb-2"></i>
-                        <p>Selecione uma avaliação acima para iniciar o lançamento.</p>
+                    <div id="grades-placeholder" class="text-center py-20 text-slate-400 bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-200 mt-4">
+                        <div class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
+                            <i class="ph-fill ph-hand-pointing text-4xl text-slate-300"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-600">Nenhuma avaliação selecionada</h4>
+                        <p class="mt-1">Escolha uma avaliação no menu acima para iniciar a digitação.</p>
                     </div>
                 </div>
             `;
@@ -959,7 +962,7 @@
             
             editor.classList.remove('hidden');
             placeholder.classList.add('hidden');
-            document.getElementById('grades-table').innerHTML = '<div class="p-8 text-center"><div class="spinner text-brand-500 mx-auto"></div></div>';
+            document.getElementById('grades-table').innerHTML = '<div class="p-12 text-center"><div class="spinner text-brand-500 mx-auto"></div><p class="mt-4 text-slate-500 font-medium">Carregando lista de alunos...</p></div>';
 
             window.currentSimIdForGrades = simId;
             window.tempGrades = {};
@@ -969,56 +972,144 @@
                 get(ref(db, 'notas'))
             ]);
 
-            const alunos = alSnap.exists() ? alSnap.val() : {};
+            window.localAlunosForGrades = alSnap.exists() ? alSnap.val() : {};
             const allGrades = ntSnap.exists() ? ntSnap.val() : {};
 
-            let html = `<table class="table-clean text-center whitespace-nowrap"><thead><tr>
-                <th class="text-left w-64">Nome do Aluno</th>
-                <th title="Linguagens">L.C.</th>
-                <th title="Matemática">M.T.</th>
-                <th title="C. Humanas">C.H.</th>
-                <th title="C. Natureza">C.N.</th>
-                <th title="Redação">RED</th>
-                <th class="bg-brand-50 text-brand-800 rounded-tr-xl">PONTUAÇÃO FINAL</th>
-            </tr></thead><tbody>`;
-
-            Object.keys(alunos).forEach(alunoId => {
-                const a = alunos[alunoId];
-                const g = (allGrades[alunoId] && allGrades[alunoId][simId]) ? allGrades[alunoId][simId] : {lc:0, mt:0, ch:0, cn:0, red:0, total:0};
+            // Popula os dados temporários de notas
+            Object.keys(window.localAlunosForGrades).forEach(alunoId => {
+                const g = (allGrades[alunoId] && allGrades[alunoId][simId]) ? allGrades[alunoId][simId] : {lc:'', mt:'', ch:'', cn:'', red:'', total:0};
+                // Garante que o total é um número válido ao carregar
+                g.total = (Number(g.lc)||0) + (Number(g.mt)||0) + (Number(g.ch)||0) + (Number(g.cn)||0) + (Number(g.red)||0);
                 window.tempGrades[alunoId] = { ...g };
+            });
 
-                const inpClass = "input-modern py-1.5 px-2 text-center text-sm font-semibold text-slate-700 w-20 mx-auto bg-slate-50";
+            window.renderSubjectTabs();
+            window.renderGradesTableActiveTab();
+        };
 
-                html += `<tr class="hover:bg-slate-50 transition-colors">
-                    <td class="text-left font-medium text-slate-700 flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-slate-200 flex-shrink-0 overflow-hidden"><img src="${a.fotoUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(a.nome)+'&bg=f1f5f9'}" class="w-full h-full object-cover"></div>
-                        <span class="truncate w-48">${a.nome}</span>
+        window.switchSubjectTab = (subjectId) => {
+            window.currentSubjectTab = subjectId;
+            window.renderSubjectTabs();
+            window.renderGradesTableActiveTab();
+        };
+
+        window.renderSubjectTabs = () => {
+            const container = document.getElementById('subject-tabs-container');
+            if(!container) return;
+
+            let html = '';
+            Object.keys(subjectsConfig).forEach(key => {
+                const config = subjectsConfig[key];
+                const isActive = window.currentSubjectTab === key;
+                
+                const activeClasses = isActive 
+                    ? `bg-white shadow-sm text-slate-800 border-b-2 border-brand-500` 
+                    : `text-slate-500 hover:bg-slate-200/50 border-b-2 border-transparent hover:text-slate-700`;
+
+                html += `
+                    <button onclick="window.switchSubjectTab('${key}')" class="flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeClasses}">
+                        <i class="ph-fill ${config.icon} ${isActive ? config.color : 'text-slate-400'} text-lg"></i>
+                        ${config.label}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        window.renderGradesTableActiveTab = () => {
+            const tableContainer = document.getElementById('grades-table');
+            if(!tableContainer) return;
+
+            const config = subjectsConfig[window.currentSubjectTab];
+            const inpClass = `w-full text-center py-2.5 px-3 rounded-lg font-bold text-lg outline-none transition-all border-2 bg-slate-50 focus:bg-white focus:${config.border}`;
+
+            let html = `<table class="table-clean text-center whitespace-nowrap w-full">
+                <thead>
+                    <tr class="bg-slate-50/80">
+                        <th class="text-left w-[40%] text-slate-500"><i class="ph-fill ph-student text-lg align-text-bottom mr-1"></i> Nome do Aluno</th>
+                        <th class="w-[30%] text-center"><span class="${config.bg} ${config.color} px-3 py-1.5 rounded-md"><i class="ph-fill ${config.icon} mr-1"></i> Nota de ${config.label}</span></th>
+                        <th class="w-[15%] text-center text-slate-500">Status</th>
+                        <th class="w-[15%] text-right pr-6 bg-brand-50/50 text-brand-800"><i class="ph-bold ph-sigma text-lg align-text-bottom mr-1"></i> Total Final</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">`;
+
+            Object.keys(window.localAlunosForGrades).forEach((alunoId, index) => {
+                const a = window.localAlunosForGrades[alunoId];
+                const g = window.tempGrades[alunoId];
+                const currentVal = g[window.currentSubjectTab];
+                
+                // Indicador visual de preenchimento
+                const hasValue = currentVal !== '' && currentVal !== undefined && currentVal !== null;
+                const statusBadge = hasValue 
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700"><i class="ph-bold ph-check"></i> OK</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500"><i class="ph-bold ph-clock"></i> Pendente</span>`;
+
+                html += `<tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="text-left py-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-300 w-4 text-right">${index + 1}.</span>
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 overflow-hidden border border-slate-200"><img src="${a.fotoUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(a.nome)+'&bg=f1f5f9'}" class="w-full h-full object-cover"></div>
+                            <span class="font-semibold text-slate-700 truncate max-w-[200px] sm:max-w-[300px]">${a.nome}</span>
+                        </div>
                     </td>
-                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.lc||''}" onchange="window.updateTempGrade('${alunoId}', 'lc', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.mt||''}" onchange="window.updateTempGrade('${alunoId}', 'mt', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.ch||''}" onchange="window.updateTempGrade('${alunoId}', 'ch', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.cn||''}" onchange="window.updateTempGrade('${alunoId}', 'cn', this.value)"></td>
-                    <td><input type="number" min="0" max="1000" class="${inpClass}" value="${g.red||''}" onchange="window.updateTempGrade('${alunoId}', 'red', this.value)"></td>
-                    <td class="font-bold text-lg text-brand-600 bg-brand-50/30" id="total-${alunoId}">${g.total||0}</td>
+                    <td class="py-3 px-4">
+                        <div class="relative max-w-[120px] mx-auto">
+                            <input type="number" min="0" max="1000" tabindex="${index + 1}" class="${inpClass} ${hasValue ? config.border : 'border-slate-200'}" value="${currentVal}" placeholder="---" oninput="window.updateTempGradeSingle('${alunoId}', this)">
+                        </div>
+                    </td>
+                    <td class="py-3 text-center" id="status-${alunoId}">
+                        ${statusBadge}
+                    </td>
+                    <td class="py-3 text-right pr-6 bg-brand-50/20">
+                        <span class="font-black text-xl text-brand-600 transition-all duration-300 inline-block" id="total-${alunoId}">${g.total || 0}</span>
+                    </td>
                 </tr>`;
             });
             html += `</tbody></table>`;
             
-            document.getElementById('grades-table').innerHTML = html;
+            tableContainer.innerHTML = html;
         };
 
-        window.updateTempGrade = (alunoId, field, val) => {
-            const num = Number(val) || 0;
-            window.tempGrades[alunoId][field] = num;
-            const g = window.tempGrades[alunoId];
-            const total = (g.lc||0) + (g.mt||0) + (g.ch||0) + (g.cn||0) + (g.red||0);
-            window.tempGrades[alunoId].total = total;
-            document.getElementById(`total-${alunoId}`).innerText = total;
+        window.updateTempGradeSingle = (alunoId, inputElement) => {
+            const val = inputElement.value;
+            const field = window.currentSubjectTab;
+            const config = subjectsConfig[field];
             
-            // Highlight total briefly
+            // Salva o valor em tempo real
+            window.tempGrades[alunoId][field] = val !== '' ? Number(val) : '';
+            
+            // Recalcula o total
+            const g = window.tempGrades[alunoId];
+            const total = (Number(g.lc)||0) + (Number(g.mt)||0) + (Number(g.ch)||0) + (Number(g.cn)||0) + (Number(g.red)||0);
+            window.tempGrades[alunoId].total = total;
+            
+            // Atualiza o DOM (Total)
             const tEl = document.getElementById(`total-${alunoId}`);
-            tEl.classList.add('text-emerald-500', 'scale-110');
-            setTimeout(() => tEl.classList.remove('text-emerald-500', 'scale-110'), 300);
+            if(tEl) {
+                tEl.innerText = total;
+                // Efeito visual de bump
+                tEl.classList.add('scale-125', 'text-emerald-500');
+                tEl.classList.remove('text-brand-600');
+                setTimeout(() => {
+                    tEl.classList.remove('scale-125', 'text-emerald-500');
+                    tEl.classList.add('text-brand-600');
+                }, 200);
+            }
+
+            // Atualiza o DOM (Status Badge & Border)
+            const sEl = document.getElementById(`status-${alunoId}`);
+            if(sEl) {
+                if(val !== '') {
+                    inputElement.classList.add(config.border);
+                    inputElement.classList.remove('border-slate-200');
+                    sEl.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700"><i class="ph-bold ph-check"></i> OK</span>`;
+                } else {
+                    inputElement.classList.remove(config.border);
+                    inputElement.classList.add('border-slate-200');
+                    sEl.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500"><i class="ph-bold ph-clock"></i> Pendente</span>`;
+                }
+            }
         };
 
         window.saveAllGrades = async () => {
@@ -1030,11 +1121,11 @@
             });
             try {
                 await update(ref(db), updates);
-                window.showToast("Notas salvas com sucesso!", "success");
-            } catch (e) { window.showToast("Erro ao salvar notas.", "error"); }
+                window.showToast("Diário de notas gravado com sucesso!", "success");
+            } catch (e) { window.showToast("Erro ao salvar o diário.", "error"); }
         };
 
-        // MURAL COMUNICADOS
+        // === MURAL DE COMUNICADOS ===
         function renderMural(container, isProf) {
             let html = `<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">`;
             
@@ -1153,7 +1244,7 @@
             window.showToast('Comunicado publicado.', 'success');
         };
 
-        // CERTIFICADOS (PROFESSOR)
+        // === CERTIFICADOS (PROFESSOR) ===
         function renderCertificatesProf(container) {
             container.innerHTML = `
                 <div class="max-w-2xl mx-auto card-modern">
@@ -1388,21 +1479,17 @@
                 </div>
                 
                 <div class="flex justify-center items-center min-h-screen bg-slate-800 pt-20 pb-10 print:bg-white print:p-0">
-                    <!-- Folha A4 Paisagem simulada -->
                     <div class="bg-white text-slate-900 w-[297mm] h-[210mm] relative flex flex-col p-16 box-border print:w-full print:h-full print:p-8" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
                         
-                        <!-- Borda Decorativa -->
                         <div class="absolute inset-4 border-[3px] border-slate-800 p-1">
                             <div class="w-full h-full border border-slate-800"></div>
                         </div>
 
-                        <!-- Marca D'água -->
                         <div class="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none">
                             <i class="ph-fill ph-certificate" style="font-size: 600px;"></i>
                         </div>
 
                         <div class="relative z-10 flex flex-col h-full">
-                            <!-- Header Certificado -->
                             <div class="flex justify-between items-start mb-12 border-b-2 border-slate-200 pb-6">
                                 <h2 class="text-2xl font-serif font-bold uppercase tracking-widest text-slate-800">${cert.instituicao}</h2>
                                 <div class="text-right">
@@ -1411,7 +1498,6 @@
                                 </div>
                             </div>
 
-                            <!-- Corpo -->
                             <div class="flex-1 flex flex-col items-center justify-center text-center px-16">
                                 <h1 class="text-5xl font-serif font-bold text-slate-900 mb-10 tracking-[0.15em] uppercase">Certificado</h1>
                                 <p class="text-lg text-slate-600 mb-6 uppercase tracking-widest">Certificamos que</p>
@@ -1423,7 +1509,6 @@
                                 </p>
                             </div>
 
-                            <!-- Footer Certificado -->
                             <div class="flex justify-between items-end mt-12 pt-8">
                                 <div class="flex gap-4 items-center">
                                     <img src="${qrUrl}" class="w-24 h-24 p-1 bg-white border border-slate-200">
